@@ -1,0 +1,224 @@
+{% extends "attendance/base.html" %}
+
+{% block title %}Create User - Time Attendance Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0"><i class="fas fa-user-plus me-2"></i>Create New User</h1>
+                    <p class="text-muted">Add a new admin user to the Time Attendance system</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('admin.manage_users') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Users
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Display -->
+    {% if error %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ error }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
+    <!-- Create User Form -->
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">User Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="createUserForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="username" name="username" 
+                                       value="{{ form_data.username if form_data else '' }}" required>
+                                <div class="form-text">Username must be unique and will be used for login.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ form_data.email if form_data else '' }}">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="full_name" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="full_name" name="full_name" 
+                                       value="{{ form_data.full_name if form_data else '' }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="role" class="form-label">Role <span class="text-danger">*</span></label>
+                                <select class="form-control" id="role" name="role" required>
+                                    <option value="admin" {{ 'selected' if form_data and form_data.role == 'admin' else '' }}>Administrator</option>
+                                    <option value="super_admin" {{ 'selected' if form_data and form_data.role == 'super_admin' else '' }}>Super Administrator</option>
+                                    <option value="manager" {{ 'selected' if form_data and form_data.role == 'manager' else '' }}>Manager</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                                <div class="form-text">Password must be at least 6 characters long.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="confirm_password" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="is_active" name="is_active" 
+                                           {{ 'checked' if not form_data or form_data.is_active != 'off' else '' }}>
+                                    <label for="is_active" class="form-check-label">
+                                        Active User
+                                    </label>
+                                    <div class="form-text">Inactive users cannot log in to the system.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card bg-light mb-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">Role Permissions</h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="rolePermissions">
+                                    <small class="text-muted">Select a role above to see permissions.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{{ url_for('admin.manage_users') }}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Create User
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const roleSelect = document.getElementById('role');
+    const permissionsDiv = document.getElementById('rolePermissions');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    
+    // Role permissions mapping
+    const rolePermissions = {
+        'admin': [
+            'Manage employees and attendance records',
+            'View reports and analytics',
+            'Configure system settings',
+            'Manage terminals and cameras'
+        ],
+        'super_admin': [
+            'All admin permissions',
+            'Manage other admin users',
+            'Access system configuration',
+            'View audit logs',
+            'Perform system maintenance'
+        ],
+        'manager': [
+            'View employee attendance',
+            'Generate basic reports',
+            'Approve time adjustments',
+            'Limited employee management'
+        ]
+    };
+    
+    function updatePermissions() {
+        const selectedRole = roleSelect.value;
+        const permissions = rolePermissions[selectedRole] || [];
+        
+        if (permissions.length > 0) {
+            permissionsDiv.innerHTML = `
+                <ul class="list-unstyled mb-0">
+                    ${permissions.map(permission => `
+                        <li><i class="fas fa-check text-success me-2"></i>${permission}</li>
+                    `).join('')}
+                </ul>
+            `;
+        } else {
+            permissionsDiv.innerHTML = '<small class="text-muted">No specific permissions defined.</small>';
+        }
+    }
+    
+    roleSelect.addEventListener('change', updatePermissions);
+    updatePermissions(); // Initial load
+    
+    // Password confirmation validation
+    function validatePasswords() {
+        const password = passwordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
+        
+        if (password && confirmPassword && password !== confirmPassword) {
+            confirmPasswordInput.setCustomValidity('Passwords do not match');
+        } else {
+            confirmPasswordInput.setCustomValidity('');
+        }
+    }
+    
+    passwordInput.addEventListener('input', validatePasswords);
+    confirmPasswordInput.addEventListener('input', validatePasswords);
+    
+    // Form submission validation
+    document.getElementById('createUserForm').addEventListener('submit', function(e) {
+        const password = passwordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
+        
+        if (password !== confirmPassword) {
+            e.preventDefault();
+            showAlert('Passwords do not match', 'danger');
+            return;
+        }
+        
+        if (password.length < 6) {
+            e.preventDefault();
+            showAlert('Password must be at least 6 characters long', 'danger');
+            return;
+        }
+    });
+});
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container-fluid');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

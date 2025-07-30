@@ -1,0 +1,60 @@
+{
+  "DEMO001": [
+    {
+      "employee_id": "DEMO001",
+      "leave_type": "annual",
+      "available_days": 18,
+      "used_days": 3,
+      "cycle_start_date": "2024-01-01T00:00:00",
+      "cycle_end_date": "2024-12-31T00:00:00",
+      "last_updated": "2025-07-12T12:48:09.059357"
+    },
+    {
+      "employee_id": "DEMO001",
+      "leave_type": "sick",
+      "available_days": 35,
+      "used_days": 1,
+      "cycle_start_date": "2024-01-01T00:00:00",
+      "cycle_end_date": "2026-12-31T00:00:00",
+      "last_updated": "2025-07-12T12:48:09.059445"
+    },
+    {
+      "employee_id": "DEMO001",
+      "leave_type": "family_responsibility",
+      "available_days": 3,
+      "used_days": 0,
+      "cycle_start_date": "2024-01-01T00:00:00",
+      "cycle_end_date": "2024-12-31T00:00:00",
+      "last_updated": "2025-07-12T12:48:09.059448"
+    }
+  ],
+  "EMP01": [
+    {
+      "employee_id": "EMP01",
+      "leave_type": "annual",
+      "available_days": 20,
+      "used_days": 1,
+      "cycle_start_date": "2024-01-01T00:00:00",
+      "cycle_end_date": "2024-12-31T00:00:00",
+      "last_updated": "2025-07-12T12:58:49.857988"
+    },
+    {
+      "employee_id": "EMP01",
+      "leave_type": "sick",
+      "available_days": 36,
+      "used_days": 0,
+      "cycle_start_date": "2024-01-01T00:00:00",
+      "cycle_end_date": "2026-12-31T00:00:00",
+      "last_updated": "2025-07-12T12:58:49.858016"
+    },
+    {
+      "employee_id": "EMP01",
+      "leave_type": "family_responsibility",
+      "available_days": 3,
+      "used_days": 0,
+      "cycle_start_date": "2024-01-01T00:00:00",
+      "cycle_end_date": "2024-12-31T00:00:00",
+      "last_updated": "2025-07-12T12:58:49.858019"
+    }
+  ]
+}

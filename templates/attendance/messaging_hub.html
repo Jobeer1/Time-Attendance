@@ -1,0 +1,428 @@
+{% extends "attendance/base.html" %}
+
+{% block title %}Employee Messaging Hub - Time Attendance{% endblock %}
+
+{% block extra_css %}
+<style>
+    .messaging-hub {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+    
+    .hub-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .hub-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    }
+    
+    .employee-card {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .employee-card:hover {
+        background: linear-gradient(135deg, #43a5f7 0%, #1ee3f3 100%);
+        transform: scale(1.05);
+    }
+    
+    .admin-card {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        color: white;
+        border: none;
+    }
+    
+    .admin-card:hover {
+        background: linear-gradient(135deg, #f76a94 0%, #fdd835 100%);
+        transform: scale(1.05);
+    }
+    
+    .quick-access-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(5px);
+    }
+    
+    .quick-access-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.5);
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .lan-info {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+    }
+    
+    .employee-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .employee-item {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 12px;
+        padding: 1rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+    
+    .employee-item:hover {
+        background: rgba(255, 255, 255, 1);
+        border-color: #007bff;
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .status-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+    }
+    
+    .status-active {
+        background-color: #28a745;
+        animation: pulse 2s infinite;
+    }
+    
+    .status-inactive {
+        background-color: #6c757d;
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="messaging-hub">
+    <div class="container">
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <h1 class="display-4 text-white mb-3">
+                <i class="fas fa-comments me-3"></i>Employee Messaging Hub
+            </h1>
+            <p class="lead text-white-50">
+                Connect and communicate with your team across the LAN network
+            </p>
+        </div>
+
+        <!-- Quick Access Cards -->
+        <div class="row mb-5">
+            <div class="col-md-6 mb-4">
+                <div class="card hub-card employee-card h-100">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-user-friends fa-4x mb-3"></i>
+                        <h3 class="card-title">Employee Messaging</h3>
+                        <p class="card-text">
+                            Send messages, share files, and collaborate with your colleagues
+                        </p>
+                        <div class="mt-4">
+                            <button class="btn quick-access-btn me-2" onclick="openEmployeeMessaging()">
+                                <i class="fas fa-envelope me-2"></i>Open Messages
+                            </button>
+                            <button class="btn quick-access-btn" onclick="showEmployeeSelection()">
+                                <i class="fas fa-search me-2"></i>Select Employee
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-4">
+                <div class="card hub-card admin-card h-100">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-cogs fa-4x mb-3"></i>
+                        <h3 class="card-title">Admin Dashboard</h3>
+                        <p class="card-text">
+                            Manage employee communications and broadcast messages
+                        </p>
+                        <div class="mt-4">
+                            <button class="btn quick-access-btn me-2" onclick="openAdminMessaging()">
+                                <i class="fas fa-shield-alt me-2"></i>Admin Panel
+                            </button>
+                            <button class="btn quick-access-btn" onclick="openBroadcast()">
+                                <i class="fas fa-bullhorn me-2"></i>Broadcast
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LAN Network Information -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="lan-info text-white">
+                    <h4 class="mb-3"><i class="fas fa-network-wired me-2"></i>LAN Network Access</h4>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <strong>Server IP:</strong><br>
+                            <code id="serverIP">Loading...</code>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Port:</strong><br>
+                            <code>5000</code>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Status:</strong><br>
+                            <span class="status-indicator status-active"></span>Online
+                        </div>
+                    </div>
+                    <hr class="my-3 border-white-50">
+                    <p class="mb-2"><strong>Quick Access URLs:</strong></p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small>Employee Messaging:</small><br>
+                            <code id="employeeURL">http://[server-ip]:5000/api/messaging/interface</code>
+                        </div>
+                        <div class="col-md-6">
+                            <small>Admin Dashboard:</small><br>
+                            <code id="adminURL">http://[server-ip]:5000/api/messaging/admin-interface</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employee Selection Modal Trigger Area -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card hub-card">
+                    <div class="card-header bg-transparent border-0">
+                        <h5 class="mb-0">
+                            <i class="fas fa-users me-2"></i>Available Employees
+                            <button class="btn btn-sm btn-outline-primary float-end" onclick="refreshEmployees()">
+                                <i class="fas fa-sync-alt me-1"></i>Refresh
+                            </button>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="employeeGrid" class="employee-grid">
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading employees...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Employee Selection Modal -->
+<div class="modal fade" id="employeeSelectionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-circle me-2"></i>Select Employee for Messaging
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="employeeSearchInput" 
+                           placeholder="Search by name, ID, or department..." 
+                           onkeyup="filterEmployeeSelection()">
+                </div>
+                <div id="employeeSelectionGrid" class="employee-grid">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let allEmployees = [];
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadServerInfo();
+    loadEmployees();
+});
+
+function loadServerInfo() {
+    // Get current server IP and update URLs
+    const currentHost = window.location.hostname;
+    const currentPort = window.location.port || '5000';
+    
+    document.getElementById('serverIP').textContent = currentHost;
+    document.getElementById('employeeURL').textContent = `http://${currentHost}:${currentPort}/api/messaging/interface`;
+    document.getElementById('adminURL').textContent = `http://${currentHost}:${currentPort}/api/messaging/admin-interface`;
+}
+
+function loadEmployees() {
+    fetch('/api/messaging/employees')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                allEmployees = data.employees;
+                displayEmployees(allEmployees);
+            } else {
+                console.error('Failed to load employees:', data.error);
+                showPlaceholderEmployees();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading employees:', error);
+            showPlaceholderEmployees();
+        });
+}
+
+function displayEmployees(employees) {
+    const grid = document.getElementById('employeeGrid');
+    
+    if (employees.length === 0) {
+        grid.innerHTML = `
+            <div class="col-12 text-center py-4">
+                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No employees found</h5>
+                <p class="text-muted">Add employees to enable messaging</p>
+            </div>
+        `;
+        return;
+    }
+    
+    grid.innerHTML = employees.map(emp => `
+        <div class="employee-item" onclick="openEmployeeMessaging('${emp.id}')">
+            <div class="mb-2">
+                <i class="fas fa-user-circle fa-2x text-primary"></i>
+            </div>
+            <h6 class="mb-1">${emp.name}</h6>
+            <small class="text-muted d-block">${emp.id}</small>
+            <small class="text-muted d-block">${emp.department}</small>
+            <div class="mt-2">
+                <span class="status-indicator status-${emp.active ? 'active' : 'inactive'}"></span>
+                <small>${emp.active ? 'Active' : 'Inactive'}</small>
+            </div>
+            <div class="mt-2">
+                <button class="btn btn-sm btn-primary">
+                    <i class="fas fa-comments me-1"></i>Message
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function showPlaceholderEmployees() {
+    const placeholderEmployees = [
+        { id: 'EMP01', name: 'Johann Strauss', department: 'IT Department', active: true },
+        { id: 'EMP02', name: 'Sarah Johnson', department: 'Human Resources', active: true },
+        { id: 'EMP003', name: 'Michael Brown', department: 'Security', active: true }
+    ];
+    displayEmployees(placeholderEmployees);
+}
+
+function openEmployeeMessaging(employeeId = null) {
+    const baseUrl = `/api/messaging/interface`;
+    const url = employeeId ? `${baseUrl}?employee_id=${employeeId}` : baseUrl;
+    window.open(url, '_blank');
+}
+
+function openAdminMessaging() {
+    window.open('/api/messaging/admin-interface', '_blank');
+}
+
+function openBroadcast() {
+    window.open('/api/messaging/admin-interface#broadcast', '_blank');
+}
+
+function showEmployeeSelection() {
+    const modal = new bootstrap.Modal(document.getElementById('employeeSelectionModal'));
+    
+    // Populate modal with employees
+    const modalGrid = document.getElementById('employeeSelectionGrid');
+    modalGrid.innerHTML = allEmployees.map(emp => `
+        <div class="employee-item" onclick="selectEmployeeForMessaging('${emp.id}')">
+            <div class="mb-2">
+                <i class="fas fa-user-circle fa-2x text-primary"></i>
+            </div>
+            <h6 class="mb-1">${emp.name}</h6>
+            <small class="text-muted d-block">${emp.id}</small>
+            <small class="text-muted d-block">${emp.department}</small>
+            <div class="mt-2">
+                <span class="status-indicator status-${emp.active ? 'active' : 'inactive'}"></span>
+                <small>${emp.active ? 'Active' : 'Inactive'}</small>
+            </div>
+        </div>
+    `).join('');
+    
+    modal.show();
+}
+
+function selectEmployeeForMessaging(employeeId) {
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('employeeSelectionModal'));
+    modal.hide();
+    
+    // Open messaging for selected employee
+    openEmployeeMessaging(employeeId);
+}
+
+function filterEmployeeSelection() {
+    const searchTerm = document.getElementById('employeeSearchInput').value.toLowerCase();
+    const filteredEmployees = allEmployees.filter(emp =>
+        emp.name.toLowerCase().includes(searchTerm) ||
+        emp.id.toLowerCase().includes(searchTerm) ||
+        emp.department.toLowerCase().includes(searchTerm)
+    );
+    
+    const modalGrid = document.getElementById('employeeSelectionGrid');
+    modalGrid.innerHTML = filteredEmployees.map(emp => `
+        <div class="employee-item" onclick="selectEmployeeForMessaging('${emp.id}')">
+            <div class="mb-2">
+                <i class="fas fa-user-circle fa-2x text-primary"></i>
+            </div>
+            <h6 class="mb-1">${emp.name}</h6>
+            <small class="text-muted d-block">${emp.id}</small>
+            <small class="text-muted d-block">${emp.department}</small>
+            <div class="mt-2">
+                <span class="status-indicator status-${emp.active ? 'active' : 'inactive'}"></span>
+                <small>${emp.active ? 'Active' : 'Inactive'}</small>
+            </div>
+        </div>
+    `).join('');
+}
+
+function refreshEmployees() {
+    document.getElementById('employeeGrid').innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Refreshing...</span>
+            </div>
+        </div>
+    `;
+    loadEmployees();
+}
+</script>
+{% endblock %}

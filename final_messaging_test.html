@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Final Messaging Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { border: 1px solid #ccc; margin: 10px 0; padding: 15px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Final Messaging System Test</h1>
+    
+    <div class="test-section">
+        <h3>Test 1: API Endpoint Response</h3>
+        <div id="api-response"></div>
+        <button onclick="testAPI()">Test Messaging API</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test 2: Search for "sara"</h3>
+        <div id="search-response"></div>
+        <button onclick="testSaraSearch()">Search for Sara</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test 3: Manual Search Test</h3>
+        <input type="text" id="manual-search" placeholder="Enter search term..." />
+        <button onclick="testManualSearch()">Search</button>
+        <div id="manual-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Raw API Response</h3>
+        <pre id="raw-response"></pre>
+    </div>
+
+    <script>
+    let allEmployees = [];
+    
+    function testAPI() {
+        const container = document.getElementById('api-response');
+        container.innerHTML = '<p class="info">Testing API endpoint...</p>';
+        
+        fetch('https://localhost:5003/api/messaging/employees')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('raw-response').textContent = JSON.stringify(data, null, 2);
+                
+                if (data.success) {
+                    allEmployees = data.employees;
+                    container.innerHTML = `
+                        <p class="success">✓ API Success</p>
+                        <p class="info">Total employees returned: ${data.employees.length}</p>
+                        <p class="info">Employee names:</p>
+                        <ul>
+                            ${data.employees.map(emp => `<li><strong>${emp.name}</strong> (${emp.id}) - ${emp.department}</li>`).join('')}
+                        </ul>
+                    `;
+                } else {
+                    container.innerHTML = `<p class="error">✗ API Failed: ${data.error || 'Unknown error'}</p>`;
+                }
+            })
+            .catch(error => {
+                container.innerHTML = `<p class="error">✗ Connection Error: ${error.message}</p>`;
+                console.error('API Error:', error);
+            });
+    }
+    
+    function testSaraSearch() {
+        if (allEmployees.length === 0) {
+            testAPI().then(() => performSaraSearch());
+        } else {
+            performSaraSearch();
+        }
+    }
+    
+    function performSaraSearch() {
+        const container = document.getElementById('search-response');
+        const searchTerm = 'sara';
+        
+        const results = allEmployees.filter(emp => 
+            emp.name.toLowerCase().includes(searchTerm) ||
+            emp.id.toLowerCase().includes(searchTerm)
+        );
+        
+        if (results.length > 0) {
+            container.innerHTML = `
+                <p class="success">✓ Found ${results.length} employees matching "${searchTerm}":</p>
+                <ul>
+                    ${results.map(emp => `<li><strong>${emp.name}</strong> (${emp.id}) - ${emp.department}</li>`).join('')}
+                </ul>
+            `;
+        } else {
+            container.innerHTML = `
+                <p class="error">✗ No employees found matching "${searchTerm}"</p>
+                <p class="info">Available employees:</p>
+                <ul>
+                    ${allEmployees.map(emp => `<li>${emp.name} (${emp.id})</li>`).join('')}
+                </ul>
+            `;
+        }
+    }
+    
+    function testManualSearch() {
+        if (allEmployees.length === 0) {
+            document.getElementById('manual-results').innerHTML = '<p class="error">Run API test first</p>';
+            return;
+        }
+        
+        const searchTerm = document.getElementById('manual-search').value.toLowerCase().trim();
+        const container = document.getElementById('manual-results');
+        
+        if (!searchTerm) {
+            container.innerHTML = '<p class="info">Please enter a search term</p>';
+            return;
+        }
+        
+        const results = allEmployees.filter(emp => 
+            emp.name.toLowerCase().includes(searchTerm) ||
+            emp.id.toLowerCase().includes(searchTerm) ||
+            emp.department.toLowerCase().includes(searchTerm)
+        );
+        
+        if (results.length > 0) {
+            container.innerHTML = `
+                <p class="success">✓ Found ${results.length} employees matching "${searchTerm}":</p>
+                <ul>
+                    ${results.map(emp => `<li><strong>${emp.name}</strong> (${emp.id}) - ${emp.department}</li>`).join('')}
+                </ul>
+            `;
+        } else {
+            container.innerHTML = `<p class="error">✗ No employees found matching "${searchTerm}"</p>`;
+        }
+    }
+    
+    // Auto-run test
+    window.onload = function() {
+        testAPI();
+    };
+    </script>
+</body>
+</html>

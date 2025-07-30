@@ -1,0 +1,268 @@
+/* Styles for PDF to Excel/CSV Converter */
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6fa;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 500px;
+    margin: 40px auto;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 32px;
+}
+
+h2 {
+    text-align: center;
+    color: #2d3e50;
+}
+
+label {
+    display: block;
+    margin-top: 18px;
+    color: #2d3e50;
+}
+
+input[type="file"], input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    margin-top: 6px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+.radio-group {
+    margin-top: 12px;
+}
+
+.radio-group label {
+    display: inline-block;
+    margin-right: 18px;
+}
+
+button {
+    margin-top: 24px;
+    width: 100%;
+    padding: 12px;
+    border: none;
+    background: #007BFF;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+button:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+/* Progress Bar Styles */
+.progress-container {
+    margin-top: 20px;
+    display: none;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 20px;
+    background-color: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #20c997);
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: 10px;
+    position: relative;
+}
+
+.progress-fill.processing {
+    background: linear-gradient(90deg, #007bff, #17a2b8);
+    animation: shimmer 2s infinite;
+}
+
+.progress-fill.success {
+    background: linear-gradient(90deg, #28a745, #20c997);
+}
+
+.progress-fill.error {
+    background: linear-gradient(90deg, #dc3545, #e55353);
+}
+
+@keyframes shimmer {
+    0% { background-position: -200px 0; }
+    100% { background-position: 200px 0; }
+}
+
+.progress-text {
+    font-size: 14px;
+    color: #495057;
+    text-align: center;
+    min-height: 20px;
+    line-height: 1.4;
+    transition: all 0.3s ease;
+}
+
+.progress-text.success {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.progress-text.error {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+/* Working spinner animation */
+.working-spinner {
+    animation: pulse 2s infinite;
+    display: inline-block;
+    margin-left: 4px;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* Batch Form Styling */
+.batch-form {
+    border: 2px dashed #007BFF;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background: #f8f9fa;
+}
+
+.batch-form h3 {
+    color: #007BFF;
+    margin-top: 0;
+}
+
+.batch-form p {
+    color: #6c757d;
+    font-size: 14px;
+}
+
+/* File upload styling */
+.file-upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    background: #f8f9fa;
+    transition: border-color 0.3s;
+}
+
+.file-upload-area:hover {
+    border-color: #007BFF;
+    background: #e3f2fd;
+}
+
+.file-upload-area.dragover {
+    border-color: #007BFF;
+    background: #e3f2fd;
+}
+
+/* Form sections */
+.form-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.form-section h3 {
+    margin-top: 0;
+    color: #495057;
+    border-bottom: 2px solid #007BFF;
+    padding-bottom: 10px;
+}
+
+/* Download links */
+a {
+    color: #007BFF;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Success messages */
+.success-message {
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+    padding: 12px;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+/* Error messages */
+.error-message {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+    padding: 12px;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+/* Info messages */
+.info-message {
+    background: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+    padding: 12px;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+    .container {
+        margin: 20px;
+        padding: 20px;
+    }
+    
+    .radio-group label {
+        display: block;
+        margin-bottom: 8px;
+    }
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    z-index: 1000;
+}

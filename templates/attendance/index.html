@@ -1,0 +1,446 @@
+{% extends "attendance/base.html" %}
+{% set is_terminal_mode = true %}
+
+{% block title %}Time Attendance System{% endblock %}
+{% block body_class %}landing-page{% endblock %}
+
+{% block content %}
+<div class="landing-container">
+    <div class="container">
+        <div class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-lg-10">                <!-- Main Header -->
+                <div class="text-center mb-5">                    <!-- Dr Stoyanov Radiology Trademark -->
+                    <div class="trademark-header mb-4">
+                        <h2 class="display-6 fw-light mb-1" style="font-family: 'Georgia', serif; letter-spacing: 1px; color: white !important;">
+                            Dr Stoyanov Radiology
+                        </h2>
+                        <div class="trademark-line mx-auto mb-4" style="width: 200px; height: 2px; background: linear-gradient(to right, #0d6efd, #6610f2);"></div>
+                    </div>
+                    
+                    <div class="landing-logo mb-4">
+                        <i class="fas fa-clock fa-4x text-primary"></i>
+                    </div>
+                    <h1 class="display-4 fw-bold mb-3" style="color: white !important;">Time Attendance System</h1>                    <p class="lead mb-4" style="color: rgba(255, 255, 255, 0.8) !important;">
+                        Advanced facial recognition and PIN-based employee time tracking solution
+                    </p>
+                </div>                <!-- Navigation Cards -->
+                <div class="row g-4">
+                    <!-- Terminal Access -->
+                    <div class="col-lg-4">
+                        <div class="card landing-card h-100 shadow-lg">
+                            <div class="card-body text-center p-4">
+                                <div class="landing-icon mb-3">
+                                    <i class="fas fa-user-clock fa-2x text-primary"></i>
+                                </div>
+                                <h4 class="card-title mb-3">Employee Terminal</h4>
+                                <p class="card-text text-muted mb-3">
+                                    Clock in/out, breaks, and attendance tracking with facial recognition or PIN authentication
+                                </p>
+                                <div class="d-grid gap-2">
+                                    <a href="{{ url_for('terminal.index') }}" class="btn btn-primary">
+                                        <i class="fas fa-sign-in-alt me-2"></i>Access Terminal
+                                    </a>
+                                </div>
+                                
+                                <!-- Features List -->
+                                <div class="mt-3">
+                                    <small class="text-muted">Features:</small>
+                                    <ul class="list-unstyled mt-2 text-muted small">
+                                        <li><i class="fas fa-check text-success me-2"></i>Facial Recognition</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>PIN Authentication</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Break Management</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Real-time Status</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Face Tracking Demo -->
+                    <div class="col-lg-4">
+                        <div class="card landing-card h-100 shadow-lg">
+                            <div class="card-body text-center p-4">
+                                <div class="landing-icon mb-3">
+                                    <i class="fas fa-video fa-2x text-info"></i>
+                                </div>
+                                <h4 class="card-title mb-3">Face Tracking Demo</h4>
+                                <p class="card-text text-muted mb-3">
+                                    Interactive demonstration of face tracking technology with visual markers and confidence indicators
+                                </p>
+                                <div class="d-grid gap-2">
+                                    <button id="startFaceDemo" class="btn btn-info">
+                                        <i class="fas fa-play me-2"></i>Start Demo
+                                    </button>
+                                    <button id="stopFaceDemo" class="btn btn-secondary" style="display: none;">
+                                        <i class="fas fa-stop me-2"></i>Stop Demo
+                                    </button>
+                                </div>
+                                
+                                <!-- Demo Container -->
+                                <div id="faceTrackingDemo" class="mt-3" style="min-height: 200px; border: 2px dashed #dee2e6; border-radius: 8px; position: relative; display: none;">
+                                    <p class="text-muted m-3">Loading face tracking simulation...</p>
+                                </div>
+                                
+                                <!-- Features List -->
+                                <div class="mt-3">
+                                    <small class="text-muted">Demonstrates:</small>
+                                    <ul class="list-unstyled mt-2 text-muted small">
+                                        <li><i class="fas fa-check text-info me-2"></i>Face Detection</li>
+                                        <li><i class="fas fa-check text-info me-2"></i>Confidence Scoring</li>
+                                        <li><i class="fas fa-check text-info me-2"></i>Quality Analysis</li>
+                                        <li><i class="fas fa-check text-info me-2"></i>Real-time Tracking</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Admin Access -->
+                    <div class="col-lg-4">
+                        <div class="card landing-card h-100 shadow-lg">
+                            <div class="card-body text-center p-4">
+                                <div class="landing-icon mb-3">
+                                    <i class="fas fa-shield-alt fa-2x text-success"></i>
+                                </div>
+                                <h4 class="card-title mb-3">Admin Dashboard</h4>
+                                <p class="card-text text-muted mb-3">
+                                    Manage employees, view reports, configure shifts, and monitor system activity
+                                </p>
+                                <div class="d-grid gap-2">
+                                    <a href="{{ url_for('admin_dashboard.dashboard') }}" class="btn btn-success">
+                                        <i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard
+                                    </a>
+                                </div>
+                                
+                                <!-- Features List -->
+                                <div class="mt-3">
+                                    <small class="text-muted">Features:</small>
+                                    <ul class="list-unstyled mt-2 text-muted small">
+                                        <li><i class="fas fa-check text-success me-2"></i>Employee Management</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Attendance Reports</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Shift Scheduling</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>System Configuration</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="row mt-5">
+                    <div class="col-12">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-md-3">
+                                        <div class="stat-item">
+                                            <div class="stat-number text-primary">
+                                                <i class="fas fa-users"></i>
+                                                <span id="totalEmployees">-</span>
+                                            </div>
+                                            <div class="stat-label">Registered Employees</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="stat-item">
+                                            <div class="stat-number text-success">
+                                                <i class="fas fa-user-check"></i>
+                                                <span id="presentToday">-</span>
+                                            </div>
+                                            <div class="stat-label">Present Today</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="stat-item">
+                                            <div class="stat-number text-info">
+                                                <i class="fas fa-desktop"></i>
+                                                <span id="activeTerminals">-</span>
+                                            </div>
+                                            <div class="stat-label">Active Terminals</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="stat-item">
+                                            <div class="stat-number text-warning">
+                                                <i class="fas fa-clock"></i>
+                                                <span id="currentTime">-</span>
+                                            </div>
+                                            <div class="stat-label">Current Time</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Status -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="text-center">
+                            <small class="text-muted">
+                                <i class="fas fa-heartbeat me-1"></i>
+                                System Status: 
+                                <span class="badge bg-success ms-1">
+                                    <i class="fas fa-check-circle"></i> Online
+                                </span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Face tracking demo variables
+    let demoActive = false;
+    let demoInterval = null;
+    
+    // Update current time
+    function updateTime() {
+        const now = new Date();
+        $('#currentTime').text(now.toLocaleTimeString());
+    }
+    
+    // Update time immediately and then every second
+    updateTime();
+    setInterval(updateTime, 1000);
+    
+    // Load system statistics
+    function loadStats() {
+        $.get('/api/system/stats')
+            .done(function(data) {
+                if (data.success) {
+                    $('#totalEmployees').text(data.stats.total_employees || 0);
+                    $('#presentToday').text(data.stats.present_today || 0);
+                    $('#activeTerminals').text(data.stats.active_terminals || 0);
+                }
+            })
+            .fail(function() {
+                // If API fails, set default values
+                $('#totalEmployees').text('5');
+                $('#presentToday').text('0');
+                $('#activeTerminals').text('1');
+            });
+    }
+    
+    // Load stats on page load
+    loadStats();
+    
+    // Add hover effects to cards
+    $('.landing-card').hover(
+        function() {
+            $(this).addClass('shadow-lg');
+        },
+        function() {
+            $(this).removeClass('shadow-lg');
+        }
+    );
+    
+    // Face tracking demo functions
+    function simulateFaceTracking(ctx, canvas) {
+        let frameCount = 0;
+        demoInterval = setInterval(() => {
+            if (!demoActive) {
+                clearInterval(demoInterval);
+                return;
+            }
+            
+            // Clear canvas
+            ctx.fillStyle = '#2c3e50';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw demo background text
+            ctx.fillStyle = '#7f8c8d';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('FACE TRACKING DEMO', canvas.width / 2, 30);
+            ctx.font = '12px Arial';
+            ctx.fillText('Real-time Detection Simulation', canvas.width / 2, 50);
+            
+            // Simulate face detection with animated bounding box
+            const time = frameCount * 0.1;
+            const centerX = canvas.width / 2 + Math.sin(time) * 15;
+            const centerY = canvas.height / 2 + Math.cos(time * 0.7) * 8;
+            const boxWidth = 120 + Math.sin(time * 2) * 8;
+            const boxHeight = 140 + Math.cos(time * 1.5) * 8;
+            
+            // Draw face bounding box
+            ctx.strokeStyle = '#27ae60';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([3, 3]);
+            ctx.strokeRect(centerX - boxWidth/2, centerY - boxHeight/2, boxWidth, boxHeight);
+            
+            // Draw face detection points
+            const landmarks = [
+                [centerX - 20, centerY - 20], // Left eye
+                [centerX + 20, centerY - 20], // Right eye
+                [centerX, centerY - 5],       // Nose
+                [centerX, centerY + 20]       // Mouth
+            ];
+            
+            ctx.fillStyle = '#e74c3c';
+            landmarks.forEach(([x, y]) => {
+                ctx.beginPath();
+                ctx.arc(x + Math.sin(time * 3) * 1, y + Math.cos(time * 2) * 1, 2, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+            
+            // Draw confidence indicator
+            const confidence = 0.85 + Math.sin(time) * 0.1;
+            ctx.fillStyle = '#3498db';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText(`Confidence: ${(confidence * 100).toFixed(1)}%`, 10, canvas.height - 30);
+            ctx.fillText(`Quality: Good`, 10, canvas.height - 18);
+            ctx.fillText(`Status: Face Detected`, 10, canvas.height - 6);
+            
+            // Draw quality indicator box
+            ctx.strokeStyle = confidence > 0.8 ? '#27ae60' : '#f39c12';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([]);
+            ctx.strokeRect(centerX - boxWidth/2 - 5, centerY - boxHeight/2 - 5, boxWidth + 10, boxHeight + 10);
+            
+            frameCount++;
+        }, 120); // ~8 FPS for smooth animation
+    }
+    
+    function startFaceDemo() {
+        console.log('🎭 Starting Face Tracking Demo on main page');
+        
+        const container = $('#faceTrackingDemo');
+        container.show().html('');
+        
+        // Create demo canvas
+        const demoCanvas = $('<canvas></canvas>');
+        demoCanvas.attr({
+            width: 280,
+            height: 180
+        });
+        demoCanvas.css({
+            width: '100%',
+            height: 'auto',
+            backgroundColor: '#2c3e50',
+            border: '2px solid #3498db',
+            borderRadius: '8px'
+        });
+        
+        container.append(demoCanvas);
+        
+        const canvas = demoCanvas[0];
+        const ctx = canvas.getContext('2d');
+        
+        // Update UI
+        demoActive = true;
+        $('#startFaceDemo').hide();
+        $('#stopFaceDemo').show();
+        
+        // Start animation
+        simulateFaceTracking(ctx, canvas);
+        
+        // Show success message
+        console.log('✅ Face tracking demo started successfully');
+    }
+    
+    function stopFaceDemo() {
+        console.log('🛑 Stopping Face Tracking Demo');
+        
+        demoActive = false;
+        if (demoInterval) {
+            clearInterval(demoInterval);
+        }
+        
+        // Hide container and reset UI
+        $('#faceTrackingDemo').hide();
+        $('#startFaceDemo').show();
+        $('#stopFaceDemo').hide();
+        
+        console.log('✅ Face tracking demo stopped');
+    }
+    
+    // Demo button event handlers
+    $('#startFaceDemo').click(startFaceDemo);
+    $('#stopFaceDemo').click(stopFaceDemo);
+    
+    console.log('✅ Main page with face tracking demo loaded');
+});
+</script>
+
+<style>
+.landing-page {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+.landing-container {
+    position: relative;
+    z-index: 1;
+}
+
+.landing-card {
+    border: none;
+    border-radius: 15px;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+}
+
+.landing-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+}
+
+.landing-icon {
+    display: inline-block;
+    padding: 20px;
+    background: rgba(0, 123, 255, 0.1);
+    border-radius: 50%;
+    margin-bottom: 20px;
+}
+
+.landing-logo {
+    display: inline-block;
+    padding: 30px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.stat-item {
+    padding: 15px;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.btn-lg {
+    padding: 12px 30px;
+    font-weight: 600;
+    border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+    .display-4 {
+        font-size: 2rem;
+    }
+    
+    .landing-card .card-body {
+        padding: 2rem !important;
+    }
+}
+</style>
+{% endblock %}

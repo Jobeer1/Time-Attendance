@@ -1,0 +1,7 @@
+# Additional requirements for Screen Human Tracker
+# (These supplement the existing requirements.txt)
+
+mss>=9.0.1
+mediapipe>=0.10.0
+opencv-python>=4.8.0
+Pillow>=10.0.0

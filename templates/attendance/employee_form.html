@@ -1,0 +1,449 @@
+{% extends "attendance/base.html" %}
+
+{% block title %}{{ 'Edit' if employee else 'Add' }} Employee - Time Attendance{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0" style="color: white !important;">{{ 'Edit' if employee else 'Add New' }} Employee</h1>
+                    <p class="text-muted">{{ 'Update employee information' if employee else 'Create a new employee record' }}</p>
+                </div>                <div>
+                    <a href="{{ url_for('employee_management.employees') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Employees
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Employee Form -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user me-2"></i>Employee Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="employeeForm" method="POST" enctype="multipart/form-data">
+                        <div class="row">
+                            <!-- Basic Information -->                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="employee_id" class="form-label">Employee ID <span class="text-danger">*</span></label>
+                                    <input type="text" id="employee_id" name="employee_id" class="form-control" 
+                                           value="{{ employee.employee_id if employee }}" required>
+                                    {% if employee %}
+                                    <div class="form-text text-warning">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        Changing Employee ID may affect existing records and integrations.
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>                                    <input type="text" id="name" name="name" class="form-control" 
+                                           value="{{ employee.full_name if employee }}" required>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email Address</label>
+                                    <input type="email" id="email" name="email" class="form-control" 
+                                           value="{{ employee.email if employee }}">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="phone" class="form-label">Phone Number</label>
+                                    <input type="tel" id="phone" name="phone" class="form-control" 
+                                           value="{{ employee.phone if employee }}">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="department" class="form-label">Department <span class="text-danger">*</span></label>
+                                    <select id="department" name="department" class="form-select" required>
+                                        <option value="">Select Department</option>
+                                        {% for dept in departments %}
+                                        <option value="{{ dept }}" {{ 'selected' if employee and employee.department == dept }}>{{ dept }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="position" class="form-label">Position</label>
+                                    <input type="text" id="position" name="position" class="form-control" 
+                                           value="{{ employee.position if employee }}">
+                                </div>
+                            </div>
+                              <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="hire_date" class="form-label">Hire Date</label>
+                                    <input type="date" id="hire_date" name="hire_date" class="form-control" 
+                                           value="{% if employee and employee.hire_date %}{% if employee.hire_date is string %}{{ employee.hire_date }}{% else %}{{ employee.hire_date.strftime('%Y-%m-%d') }}{% endif %}{% endif %}">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="salary" class="form-label">Salary</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">R</span>
+                                        <input type="number" id="salary" name="salary" class="form-control" step="0.01"
+                                               value="{{ employee.salary if employee }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Authentication Settings -->
+                        <hr>
+                        <h6 class="mb-3">Authentication Settings</h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">                                <div class="mb-3">
+                                    <label for="pin" class="form-label">PIN (4 digits)</label>
+                                    <input type="password" id="pin" name="pin" class="form-control" maxlength="4" 
+                                           placeholder="{{ 'Leave blank to keep current PIN' if employee else 'Enter 4-digit PIN' }}">
+                                    <div class="form-text">Enter a 4-digit PIN for terminal access</div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Authentication Methods</label>
+                                    <div class="form-check">
+                                        <input type="checkbox" id="require_face" name="require_face" class="form-check-input" 
+                                               {{ 'checked' if employee and employee.require_face_recognition }}>
+                                        <label for="require_face" class="form-check-label">
+                                            Require Face Recognition
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="checkbox" id="require_pin" name="require_pin" class="form-check-input" 
+                                               {{ 'checked' if employee and employee.require_pin }}>
+                                        <label for="require_pin" class="form-check-label">
+                                            Require PIN
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Status and Permissions -->
+                        <hr>
+                        <h6 class="mb-3">Status and Permissions</h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input type="checkbox" id="is_active" name="is_active" class="form-check-input" 
+                                               {{ 'checked' if not employee or employee.is_active }}>
+                                        <label for="is_active" class="form-check-label">Active Employee</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">                                        <input type="checkbox" id="can_overtime" name="can_overtime" class="form-check-input" 
+                                               {{ 'checked' if not employee or employee.can_work_overtime }}>
+                                        <label for="can_overtime" class="form-check-label">Can Work Overtime</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea id="notes" name="notes" class="form-control" rows="3">{{ employee.notes if employee }}</textarea>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="row">
+                            <div class="col-12">                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>{{ 'Update' if employee else 'Create' }} Employee
+                                </button>
+                                <a href="{{ url_for('employee_management.employees') }}" class="btn btn-secondary ms-2">Cancel</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Photo and Face Recognition -->
+        <div class="col-lg-4">
+            <!-- Photo Upload -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-camera me-2"></i>Employee Photo
+                    </h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="employee-photo-container mb-3">
+                        {% if employee and employee.photo %}
+                            <img id="employeePhotoPreview" src="{{ employee.photo }}" alt="Employee Photo" class="img-thumbnail mb-3">
+                        {% else %}
+                            <div id="employeePhotoPlaceholder" class="photo-placeholder mb-3">
+                                <i class="fas fa-user-circle fa-5x text-muted"></i>
+                                <p class="text-muted mt-2">No photo uploaded</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="photo" class="form-label">Upload Photo</label>
+                        <input type="file" id="photo" name="photo" class="form-control" accept="image/*">
+                        <div class="form-text">Supported formats: JPG, PNG, GIF (max 5MB)</div>
+                    </div>
+                    
+                    <button type="button" id="capturePhotoBtn" class="btn btn-outline-primary">
+                        <i class="fas fa-camera me-2"></i>Capture from Camera
+                    </button>
+                </div>
+            </div>
+
+            <!-- Face Recognition Status -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-face-grin me-2"></i>Face Recognition
+                    </h5>
+                </div>
+                <div class="card-body">                    {% if employee and employee.face_encodings %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>Enrolled</strong><br>
+                            {{ employee.face_encodings|length }} face encoding(s) stored
+                            <small class="d-block mt-1 text-muted">
+                                More photos = better accuracy. You can add more photos anytime.
+                            </small>
+                        </div>                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-success" onclick="addMorePhotos('{{ employee.employee_id }}')">
+                                <i class="fas fa-plus me-2"></i>Add More Photos
+                            </button>
+                            <small class="text-muted mb-2">↑ Improve accuracy by adding more photos (keeps existing data)</small>
+                            
+                            <button type="button" class="btn btn-outline-primary" onclick="reEnrollFace('{{ employee.employee_id }}')">
+                                <i class="fas fa-sync me-2"></i>Re-enroll Face
+                            </button>
+                            <small class="text-muted mb-2">↑ Start over completely (replaces all existing data)</small>
+                            
+                            <button type="button" class="btn btn-outline-danger" onclick="removeFaceData('{{ employee.employee_id }}')">
+                                <i class="fas fa-trash me-2"></i>Remove Face Data
+                            </button>
+                            <small class="text-muted">↑ Delete all face recognition data</small>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Not Enrolled</strong><br>
+                            Face recognition is not set up for this employee
+                        </div>
+                        
+                        {% if employee %}
+                        <div class="d-grid">
+                            <button type="button" class="btn btn-primary" onclick="enrollFace('{{ employee.employee_id }}')">
+                                <i class="fas fa-camera me-2"></i>Enroll Face Recognition
+                            </button>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Save the employee first, then enroll face recognition
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Shift Assignment -->
+            {% if employee %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>Shift Assignment
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="shiftAssignmentForm">
+                        <input type="hidden" value="{{ employee.employee_id }}">
+                        <div class="mb-3">
+                            <label for="shiftSelect" class="form-label">Assign Shift</label>
+                            <select id="shiftSelect" class="form-select">
+                                <option value="">No Shift Assigned</option>
+                                {% for shift in shifts %}
+                                <option value="{{ shift.shift_id }}" 
+                                        {{ 'selected' if employee.current_shift and employee.current_shift.shift_id == shift.shift_id }}>
+                                    {{ shift.name }} ({{ shift.start_time }} - {{ shift.end_time }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="effectiveDate" class="form-label">Effective Date</label>
+                            <input type="date" id="effectiveDate" class="form-control" 
+                                   value="{{ today.strftime('%Y-%m-%d') }}">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-save me-2"></i>Update Shift
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Photo Capture Modal -->
+<div class="modal fade" id="photoCaptureModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Capture Employee Photo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="camera-container">
+                    <video id="photoCaptureVideo" autoplay muted class="camera-feed"></video>
+                    <canvas id="photoCaptureCanvas" style="display: none;"></canvas>
+                </div>
+                
+                <div class="camera-controls mt-3">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <button id="startPhotoCaptureCamera" class="btn btn-primary w-100">
+                                <i class="fas fa-camera me-2"></i>Start Camera
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button id="capturePhotoImage" class="btn btn-success w-100" disabled>
+                                <i class="fas fa-camera-retro me-2"></i>Capture
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button id="retakePhoto" class="btn btn-warning w-100" style="display: none;">
+                                <i class="fas fa-redo me-2"></i>Retake
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="usePhoto" class="btn btn-primary" style="display: none;">
+                    <i class="fas fa-check me-2"></i>Use This Photo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Face Enrollment Modal (Employee Form) -->
+<div class="modal fade" id="employeeFormFaceEnrollmentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Face Recognition Enrollment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="employeeFormEnrollmentContent">
+                    <div class="text-center mb-3">
+                        <h6 id="employeeFormEnrollmentEmployeeName"></h6>
+                        <p class="text-muted">Please capture multiple photos for better recognition accuracy</p>
+                    </div>
+                    
+                    <div class="camera-container">
+                        <video id="employeeFormEnrollmentVideo" autoplay muted class="camera-feed"></video>
+                        <canvas id="employeeFormEnrollmentCanvas" style="display: none;"></canvas>
+                        <div class="camera-overlay">
+                            <div class="face-guide"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="enrollment-controls mt-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <button id="employeeFormStartEnrollmentCamera" class="btn btn-primary w-100">
+                                    <i class="fas fa-camera me-2"></i>Start Camera
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <button id="employeeFormCaptureEnrollmentPhoto" class="btn btn-success w-100" disabled>
+                                    <i class="fas fa-camera-retro me-2"></i>Capture Photo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="enrollment-progress mt-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Photos Captured:</span>
+                            <span id="employeeFormPhotoCount">0 / 5</span>
+                        </div>
+                        <div class="progress">
+                            <div id="employeeFormEnrollmentProgress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="employeeFormCapturedPhotos" class="captured-photos mt-3 d-none">
+                        <h6>Captured Photos:</h6>
+                        <div class="row" id="employeeFormPhotoThumbnails"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="employeeFormSaveEnrollment" class="btn btn-primary" disabled>
+                    <i class="fas fa-save me-2"></i>Save Enrollment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='attendance/js/camera-enhanced.js') }}"></script>
+<script src="{{ url_for('static', filename='attendance/js/face-recognition-enhanced.js') }}"></script>
+<script src="{{ url_for('static', filename='attendance/js/face-tracking.js') }}"></script>
+<script src="{{ url_for('static', filename='attendance/js/employee_form.js') }}?v={{ range(1, 10000) | random }}"></script>
+<script>
+// Initialize face tracker when page loads
+$(document).ready(function() {
+    console.log('🎯 Initializing Face Tracker...');
+    
+    if (typeof FaceTracker !== 'undefined') {
+        window.faceTracker = new FaceTracker();
+        window.faceTracker.initialize().then(() => {
+            console.log('✅ Face Tracker initialized successfully');
+        }).catch((error) => {
+            console.log('⚠️ Face Tracker initialization failed:', error.message);
+        });
+    } else {
+        console.log('⚠️ FaceTracker class not available');
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Employee API Test</title>
+</head>
+<body>
+    <h1>Employee API Test</h1>
+    <button onclick="testAPI()">Test Employee API</button>
+    <div id="results"></div>
+
+    <script>
+    function testAPI() {
+        fetch('https://localhost:5003/api/employees/list')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('results').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                console.log('API Response:', data);
+            })
+            .catch(error => {
+                document.getElementById('results').innerHTML = 'Error: ' + error;
+                console.error('API Error:', error);
+            });
+    }
+    
+    // Auto-test on page load
+    window.onload = function() {
+        testAPI();
+    };
+    </script>
+</body>
+</html>

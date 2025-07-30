@@ -1,0 +1,94 @@
+{% extends "attendance/base.html" %}
+{% set is_terminal_mode = true %}
+
+{% block title %}Admin Login - Time Attendance{% endblock %}
+{% block body_class %}terminal-mode{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center align-items-center min-vh-100">
+        <div class="col-md-6 col-lg-4">
+            <div class="card terminal-card">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
+                        <h3 class="card-title">Admin Access</h3>                        <p class="text-muted">Time Attendance System</p>
+                    </div>
+
+                    {% if error %}
+                    <div class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>{{ error }}
+                    </div>
+                    {% endif %}
+
+                    <form method="POST" id="adminLoginForm">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-user"></i>
+                                </span>
+                                <input type="text" id="username" name="username" class="form-control" 
+                                       value="{{ request.args.get('username', '') }}" required autofocus>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="password" class="form-label">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-lock"></i>
+                                </span>
+                                <input type="password" id="password" name="password" class="form-control" required>
+                                <button type="button" class="btn btn-outline-secondary" id="togglePassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="d-grid mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i>Login
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="text-center">
+                        <small class="text-muted">
+                            <a href="{{ url_for('terminal.index') }}" class="text-decoration-none">
+                                <i class="fas fa-arrow-left me-1"></i>Back to Terminal
+                            </a>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Toggle password visibility
+    $('#togglePassword').on('click', function() {
+        const passwordInput = $('#password');
+        const icon = $(this).find('i');
+        
+        if (passwordInput.attr('type') === 'password') {
+            passwordInput.attr('type', 'text');
+            icon.removeClass('fa-eye').addClass('fa-eye-slash');
+        } else {
+            passwordInput.attr('type', 'password');
+            icon.removeClass('fa-eye-slash').addClass('fa-eye');
+        }
+    });
+
+    // Auto-fill from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('password')) {
+        $('#password').val(urlParams.get('password'));
+    }
+});
+</script>
+{% endblock %}

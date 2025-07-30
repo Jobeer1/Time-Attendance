@@ -1,0 +1,614 @@
+{% extends "attendance/base.html" %}
+
+{% block title %}Camera Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">Camera Management</h1>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCameraModal">
+                    <i class="fas fa-plus me-2"></i>Add Camera
+                </button>
+            </div>
+
+            <!-- Camera List -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Configured Cameras</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="camerasTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Location</th>
+                                    <th>Description</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for camera in cameras %}                                <tr data-camera-id="{{ camera.id }}">
+                                    <td>
+                                        <a href="#" class="text-decoration-none fw-bold camera-name-link" 
+                                           data-action="view" data-camera-id="{{ camera.id }}"
+                                           data-camera-url="{{ camera.url }}" data-camera-username="{{ camera.username }}" 
+                                           data-camera-password="{{ camera.password }}" title="Click to view camera">
+                                            <i class="fas fa-video me-1 text-primary"></i>{{ camera.name }}
+                                        </a>
+                                    </td>
+                                    <td>{{ camera.location }}</td>
+                                    <td>{{ camera.description or '-' }}</td>
+                                    <td>
+                                        {% if camera.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ camera.created_at[:10] if camera.created_at else '-' }}</td>                                    <td>
+                                        <a href="#" class="btn btn-sm btn-primary me-1" data-action="view" data-camera-id="{{ camera.id }}" 
+                                           data-camera-url="{{ camera.url }}" data-camera-username="{{ camera.username }}" 
+                                           data-camera-password="{{ camera.password }}" title="View Camera">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button class="btn btn-sm btn-outline-primary me-1" data-action="edit" data-camera-id="{{ camera.id }}">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-info me-1" data-action="test" data-camera-id="{{ camera.id }}">
+                                            <i class="fas fa-video"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" data-action="delete" data-camera-id="{{ camera.id }}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced Add Camera Modal with Stream Discovery -->
+<div class="modal fade" id="addCameraModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">🎥 Add New Camera & Discover Streams</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addCameraForm">
+                <div class="modal-body">
+                    <!-- Step 1: Basic Camera Info -->
+                    <div id="step1" class="camera-setup-step">
+                        <h6 class="text-primary mb-3">📝 Step 1: Basic Camera Information</h6>
+                        
+                        <div class="mb-3">
+                            <label for="cameraName" class="form-label">Camera Name *</label>
+                            <input type="text" class="form-control" id="cameraName" name="name" required 
+                                   placeholder="e.g., Main Entrance Camera">
+                            <div class="form-text">Friendly name for the camera</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="cameraLocation" class="form-label">Location *</label>
+                            <select class="form-control" id="cameraLocation" name="location" required>
+                                <option value="">Select location...</option>
+                                <option value="main_entrance">Main Entrance</option>
+                                <option value="lobby">Lobby/Reception</option>
+                                <option value="corridor">Corridor</option>
+                                <option value="exit">Exit</option>
+                                <option value="parking">Parking Area</option>
+                                <option value="office">Office Area</option>
+                                <option value="custom">Custom Location</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3" id="customLocationDiv" style="display: none;">
+                            <label for="customLocation" class="form-label">Custom Location</label>
+                            <input type="text" class="form-control" id="customLocation" name="custom_location" 
+                                   placeholder="Enter custom location">
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="button" class="btn btn-primary" onclick="nextStep(2)">
+                                Next: Camera Connection 🔧
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Camera Connection Details -->
+                    <div id="step2" class="camera-setup-step" style="display: none;">
+                        <h6 class="text-primary mb-3">🔧 Step 2: Camera Connection Details</h6>
+                        
+                        <div class="mb-3">
+                            <label for="cameraIp" class="form-label">Camera IP Address *</label>
+                            <input type="text" class="form-control" id="cameraIp" name="ip" required 
+                                   placeholder="192.168.1.100 or 155.235.81.65"
+                                   pattern="^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$">
+                            <div class="form-text">IP address of your camera</div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="cameraUsername" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="cameraUsername" name="username" 
+                                       placeholder="admin">
+                                <div class="form-text">Camera login username</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="cameraPassword" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="cameraPassword" name="password" 
+                                       placeholder="password">
+                                <div class="form-text">Camera login password</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <label for="cameraPort" class="form-label">Port (Optional)</label>
+                                <input type="number" class="form-control" id="cameraPort" name="port" 
+                                       placeholder="80, 554, 8080" min="1" max="65535">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="cameraProtocol" class="form-label">Protocol</label>
+                                <select class="form-control" id="cameraProtocol" name="protocol">
+                                    <option value="http">HTTP</option>
+                                    <option value="https">HTTPS</option>
+                                    <option value="rtsp">RTSP</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <button type="button" class="btn btn-secondary" onclick="prevStep(1)">
+                                ← Previous
+                            </button>
+                            <button type="button" class="btn btn-success" onclick="discoverStreams()">
+                                🔍 Discover Streams
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Stream Discovery Results -->
+                    <div id="step3" class="camera-setup-step" style="display: none;">
+                        <h6 class="text-primary mb-3">🔍 Step 3: Stream Discovery Results</h6>
+                        
+                        <div id="discoveryProgress" class="text-center py-4" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Discovering streams...</span>
+                            </div>
+                            <p class="mt-2">Scanning for video streams...</p>
+                            <div class="progress mt-3">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     role="progressbar" style="width: 0%" id="discoveryProgressBar">
+                                </div>
+                            </div>
+                            <small id="discoveryStatus" class="text-muted">Initializing...</small>
+                        </div>
+                        
+                        <div id="discoveryResults" style="display: none;">
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <span id="discoveryCount">0</span> working stream(s) found!
+                            </div>
+                            
+                            <div id="streamsList" class="list-group mb-3">
+                                <!-- Dynamic stream results -->
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Next:</strong> Select the best stream for your needs and test it.
+                            </div>
+                        </div>
+                        
+                        <div id="discoveryError" style="display: none;">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <span id="errorMessage">No streams found</span>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">💡 Manual Configuration</h6>
+                                </div>
+                                <div class="card-body">
+                                    <label for="manualUrl" class="form-label">Enter Stream URL Manually</label>
+                                    <input type="text" class="form-control" id="manualUrl" 
+                                           placeholder="http://155.235.81.65/mjpeg or rtsp://...">
+                                    <div class="form-text">If you know the direct stream URL, enter it here</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <button type="button" class="btn btn-secondary" onclick="prevStep(2)">
+                                ← Previous
+                            </button>
+                            <button type="button" class="btn btn-info" onclick="rediscoverStreams()">
+                                🔄 Retry Discovery
+                            </button>
+                            <button type="button" class="btn btn-success" onclick="nextStep(4)" 
+                                    id="continueToTestBtn" disabled>
+                                Continue to Test 🧪
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Stream Testing & Integration -->
+                    <div id="step4" class="camera-setup-step" style="display: none;">
+                        <h6 class="text-primary mb-3">🧪 Step 4: Test & Integrate Stream</h6>
+                        
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">Selected Stream</h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="selectedStreamInfo">
+                                    <p><strong>URL:</strong> <span id="selectedStreamUrl">-</span></p>
+                                    <p><strong>Type:</strong> <span id="selectedStreamType">-</span></p>
+                                    <p><strong>Status:</strong> <span id="selectedStreamStatus" class="badge">-</span></p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">Stream Preview</h6>
+                            </div>
+                            <div class="card-body text-center">
+                                <div id="streamPreview" style="background: #000; height: 200px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                    <span class="text-white">Stream preview will appear here</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-primary" onclick="testSelectedStream()">
+                                🧪 Test Stream Connection
+                            </button>
+                            <button type="button" class="btn btn-success" onclick="integrateCamera()" 
+                                    id="integrateCameraBtn" disabled>
+                                ✅ Integrate Camera into System
+                            </button>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <button type="button" class="btn btn-secondary" onclick="prevStep(3)">
+                                ← Previous
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: Integration Complete -->
+                    <div id="step5" class="camera-setup-step" style="display: none;">
+                        <div class="text-center py-4">
+                            <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+                            <h4 class="text-success mt-3">Camera Integration Complete! 🎉</h4>
+                            <p class="text-muted">Your camera has been successfully added to the system.</p>
+                            
+                            <div class="card mt-4">
+                                <div class="card-body">
+                                    <h6>What's Next?</h6>
+                                    <ul class="list-unstyled">
+                                        <li>✅ Camera is now monitoring for attendance</li>
+                                        <li>✅ Face detection is active</li>
+                                        <li>✅ Zone-based tracking configured</li>
+                                        <li>✅ Ready for employee enrollment</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
+                                <button type="button" class="btn btn-primary" onclick="viewCamera()">
+                                    📺 View Live Feed
+                                </button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    ✨ Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Original URL field (hidden in new flow but keeping for compatibility) -->
+<div style="display: none;">
+    <div class="mb-3">
+        <label for="cameraUrl" class="form-label">Camera URL *</label>
+                        <input type="url" class="form-control" id="cameraUrl" name="url" required placeholder="rtsp://camera-ip:port/stream or http://camera-ip/mjpeg">
+                        <div class="form-text">
+                            Stream URL for the camera. Examples:<br>
+                            • RTSP: rtsp://192.168.1.100:554/stream<br>
+                            • HTTP: http://192.168.1.100/mjpeg<br>
+                            • WebRTC: webrtc://192.168.1.100:8080/stream
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="cameraUsername" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="cameraUsername" name="username" placeholder="Authentication username">
+                                <div class="form-text">Leave empty if camera doesn't require authentication</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="cameraPassword" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="cameraPassword" name="password" placeholder="Authentication password">
+                                <div class="form-text">Leave empty if camera doesn't require authentication</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="cameraDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="cameraDescription" name="description" rows="2" placeholder="Additional details about this camera"></textarea>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="cameraActive" name="is_active" checked>
+                        <label class="form-check-label" for="cameraActive">Active</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Camera</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Camera Modal -->
+<div class="modal fade" id="editCameraModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Camera</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editCameraForm">
+                <input type="hidden" id="editCameraId" name="id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="editCameraName" class="form-label">Camera Name *</label>
+                        <input type="text" class="form-control" id="editCameraName" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editCameraLocation" class="form-label">Location *</label>
+                        <input type="text" class="form-control" id="editCameraLocation" name="location" required>
+                    </div>                    <div class="mb-3">
+                        <label for="editCameraUrl" class="form-label">Camera URL *</label>
+                        <input type="url" class="form-control" id="editCameraUrl" name="url" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editCameraUsername" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="editCameraUsername" name="username" placeholder="Authentication username">
+                                <div class="form-text">Leave empty if camera doesn't require authentication</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editCameraPassword" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="editCameraPassword" name="password" placeholder="Authentication password">
+                                <div class="form-text">Leave empty if camera doesn't require authentication</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editCameraDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="editCameraDescription" name="description" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="editCameraActive" name="is_active">
+                        <label class="form-check-label" for="editCameraActive">Active</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Camera</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Camera Test Modal -->
+<div class="modal fade" id="testCameraModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Camera Stream Preview with Human Detection</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Human Detection Controls -->
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-users me-2"></i>Real-Time Human Detection</h6>
+                            <p class="mb-0">This camera feed includes <strong>automatic human detection</strong> with 3 dots per person:
+                                <span class="badge bg-danger me-1">👤 Head</span>
+                                <span class="badge bg-success me-1">🫀 Torso</span>
+                                <span class="badge bg-primary">🦵 Lower Body</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-success">
+                            <div class="card-body text-center p-2">
+                                <small class="text-muted">Detection Status</small><br>
+                                <span id="humanDetectionStatus" class="badge bg-secondary">Initializing...</span><br>
+                                <small class="text-muted mt-1">Humans: <span id="humanCount">0</span></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <div id="cameraPreviewContainer" style="position: relative; background: #000; min-height: 400px; border-radius: 8px;">
+                        <!-- Video element for stream preview -->
+                        <video id="testCameraVideo" width="100%" height="400" controls autoplay muted style="background: #000; border-radius: 8px;">
+                            Your browser does not support the video tag.
+                        </video>
+                        <!-- Image element for MJPEG streams -->
+                        <img id="testCameraImage" width="100%" height="400" style="display: none; background: #000; border-radius: 8px;" alt="Camera Stream">
+                        <!-- Human Detection Overlay will be added here automatically -->
+                        <!-- Loading indicator -->
+                        <div id="cameraLoadingIndicator" class="position-absolute top-50 start-50 translate-middle text-white">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Connecting to camera...</p>
+                        </div>
+                    </div>
+                    <div id="testCameraStatus" class="mt-3">
+                        <div class="alert alert-info" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <span id="cameraStatusText">Initializing camera connection...</span>
+                        </div>
+                        <div id="cameraUrlDebug" class="mt-2" style="display:none;">
+                            <strong>Camera URL:</strong> <a href="#" id="cameraUrlLink" target="_blank" rel="noopener noreferrer"></a>
+                            <span id="cameraUrlWarning" class="text-danger ms-2" style="display:none;"></span>
+                        </div>
+                    </div>
+                    <!-- Camera info panel -->
+                    <div id="cameraInfo" class="mt-3 d-none">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <small class="text-muted">Resolution:</small><br>
+                                <span id="cameraResolution">-</span>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Stream Type:</small><br>
+                                <span id="cameraStreamType">-</span>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Detection:</small><br>
+                                <span id="detectionMode">-</span>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Status:</small><br>
+                                <span id="cameraConnectionStatus">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-success" id="toggleHumanDetection">
+                    <i class="fas fa-users me-2"></i>Toggle Human Detection
+                </button>
+                <button type="button" class="btn btn-outline-primary" id="refreshStream">
+                    <i class="fas fa-refresh me-2"></i>Refresh Stream
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Camera Access Confirmation Modal -->
+<div class="modal fade" id="cameraAccessModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-video me-2"></i>Access Camera
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>            <div class="modal-body">
+                <div class="text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-video fa-3x text-primary mb-3"></i>
+                        <h5 id="cameraAccessName">Camera Name</h5>
+                        <p class="text-muted" id="cameraAccessLocation">Camera Location</p>
+                    </div>
+                    
+                    <!-- Human Detection Feature -->
+                    <div class="alert alert-warning mb-3">
+                        <h6><i class="fas fa-users me-2"></i>Enhanced Camera Viewing</h6>
+                        <p class="mb-2">This camera will open with <strong>real-time human detection</strong> capabilities:</p>
+                        <div class="d-flex justify-content-center gap-1 mb-2">
+                            <span class="badge bg-danger">👤 Head</span>
+                            <span class="badge bg-success">🫀 Torso</span>
+                            <span class="badge bg-primary">🦵 Lower Body</span>
+                        </div>
+                        <small class="text-muted">Look for the "Track Humans" button in the camera popup window.</small>
+                    </div>
+                      
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        This will open the camera's web interface in a new window with automatic authentication.
+                        <div class="mt-2 small">
+                            <strong>Note:</strong> If the camera requires additional setup or has a different authentication method, 
+                            you may need to configure it manually in the camera's interface.
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <strong>Camera URL:</strong><br>
+                        <code id="cameraAccessUrl" class="text-break">Loading...</code>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmCameraAccess">
+                    <i class="fas fa-external-link-alt me-2"></i>Open Camera with Human Detection
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block styles %}
+<style>
+.camera-name-link {
+    color: #0d6efd !important;
+    transition: all 0.2s ease;
+}
+
+.camera-name-link:hover {
+    color: #0a58ca !important;
+    text-decoration: underline !important;
+}
+
+.camera-name-link:hover .fas {
+    transform: scale(1.1);
+}
+
+.table tbody tr:hover .camera-name-link {
+    color: #0a58ca !important;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<!-- MediaPipe Scripts for Human Detection -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+
+<!-- Human Detection System -->
+<script src="{{ url_for('static', filename='attendance/js/camera-human-detection.js') }}"></script>
+
+<!-- Camera Management Script -->
+<script src="{{ url_for('static', filename='attendance/js/admin_cameras.js') }}?v=HUMAN_DETECTION_ENABLED"></script>
+{% endblock %}

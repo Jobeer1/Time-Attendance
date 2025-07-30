@@ -1,0 +1,310 @@
+{% extends "attendance/base.html" %}
+
+{% block title %}Admin Dashboard - Time Attendance{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">    <!-- Dashboard Header -->
+    <div class="row mb-4">
+        <div class="col-12">            <!-- Dr Stoyanov Radiology Trademark -->
+            <div class="text-center mb-4 trademark-header">
+                <h2 class="display-6 fw-light mb-1" style="font-family: 'Georgia', serif; letter-spacing: 1px; color: white !important;">
+                    Dr Stoyanov Radiology
+                </h2>
+                <div class="trademark-line mx-auto mb-3" style="width: 180px; height: 2px; background: linear-gradient(to right, #0d6efd, #6610f2);"></div>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0" style="color: white !important;">Admin Dashboard</h1>
+                    <p class="text-muted">Welcome to the Time Attendance System</p>
+                </div>
+                <div class="text-end">
+                    <div class="current-time-display">
+                        <div class="time" id="dashboardTime"></div>
+                        <div class="date" id="dashboardDate"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75">Total Employees</div>
+                            <div class="h2 mb-0">{{ stats.total_employees }}</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+          <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-success text-white clickable-card" id="presentTodayCard" style="cursor: pointer;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75">Present Today</div>
+                            <div class="h2 mb-0">{{ stats.present_today }}</div>
+                            <small class="text-white-50">Click to view details</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-check fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+          <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white clickable-card" id="lateTodayCard" style="cursor: pointer;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75">Late Today</div>
+                            <div class="h2 mb-0">{{ stats.late_today }}</div>
+                            <small class="text-white-50">Click to view details</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+          <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-danger text-white clickable-card" id="absentTodayCard" style="cursor: pointer;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75">Absent Today</div>
+                            <div class="h2 mb-0">{{ stats.absent_today }}</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-times fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Today's Activity -->
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-clock me-2"></i>Today's Activity
+                    </h5>
+                    <button class="btn btn-sm btn-outline-primary" id="refreshActivity">
+                        <i class="fas fa-refresh"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Action</th>
+                                    <th>Time</th>
+                                    <th>IP Address</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="todayActivity">
+                                {% for record in today_activity %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar me-2">
+                                                {% if record.employee.photo %}
+                                                    <img src="{{ record.employee.photo }}" alt="{{ record.employee.name }}" class="rounded-circle" width="32" height="32">
+                                                {% else %}
+                                                    <i class="fas fa-user-circle fa-2x text-muted"></i>
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">{{ record.employee.name }}</div>
+                                                <small class="text-muted">{{ record.employee.employee_id }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ record.action_color }}">
+                                            <i class="fas fa-{{ record.action_icon }} me-1"></i>
+                                            {{ record.action_type }}
+                                        </span>
+                                    </td>                                    <td>{{ record.timestamp.strftime('%H:%M:%S') }}</td>
+                                    <td>
+                                        <small class="text-muted">{{ record.ip_address or 'Unknown' }}</small>
+                                    </td>
+                                    <td>
+                                        {% if record.is_late %}
+                                            <span class="badge bg-warning">Late</span>
+                                        {% elif record.is_early %}
+                                            <span class="badge bg-info">Early</span>
+                                        {% else %}
+                                            <span class="badge bg-success">On Time</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions & System Status -->
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt me-2"></i>Quick Actions
+                    </h5>
+                </div>                <div class="card-body">                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('employee_management.add_employee') }}" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-2"></i>Add New Employee
+                        </a>
+                        <a href="{{ url_for('user_management.manage_users') }}" class="btn btn-outline-info">
+                            <i class="fas fa-users-cog me-2"></i>Manage Admin Users
+                        </a>
+                        <a href="{{ url_for('admin_dashboard.leave_management') }}" class="btn btn-outline-warning">
+                            <i class="fas fa-calendar-alt me-2"></i>Pending Leaves ({{ pending_leaves }})
+                        </a>
+                        <a href="{{ url_for('reports.attendance_records') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-list me-2"></i>View All Attendance
+                        </a>
+                        <a href="{{ url_for('reports.reports') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-chart-bar me-2"></i>Generate Reports
+                        </a>
+                        <a href="/api/messaging/admin-interface" class="btn btn-outline-success">
+                            <i class="fas fa-comments me-2"></i>Employee Messages
+                        </a>
+                        <button class="btn btn-outline-success" id="exportData">
+                            <i class="fas fa-download me-2"></i>Export Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-server me-2"></i>System Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Face Recognition Service</span>
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle"></i> Online
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Database</span>
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle"></i> Connected
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Active Terminals</span>
+                            <span class="badge bg-info">{{ stats.active_terminals }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Last Backup</span>
+                            <small class="text-muted">{{ stats.last_backup or 'Never' }}</small>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button class="btn btn-outline-secondary btn-sm" id="systemHealth">
+                            <i class="fas fa-heartbeat me-1"></i>System Health
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Alerts -->
+    {% if alerts %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Recent Alerts
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for alert in alerts %}
+                    <div class="alert alert-{{ alert.type }} alert-dismissible fade show">
+                        <i class="fas fa-{{ alert.icon }} me-2"></i>
+                        <strong>{{ alert.title }}:</strong> {{ alert.message }}
+                        <small class="float-end">{{ alert.timestamp.strftime('%H:%M:%S') }}</small>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.clickable-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.clickable-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.present-employee-row {
+    background-color: rgba(40, 167, 69, 0.1);
+    border-left: 3px solid #28a745;
+}
+
+.present-employee-row:hover {
+    background-color: rgba(40, 167, 69, 0.15);
+}
+
+.late-employee-row {
+    background-color: rgba(255, 193, 7, 0.1);
+    border-left: 3px solid #ffc107;
+}
+
+.late-employee-row:hover {
+    background-color: rgba(255, 193, 7, 0.15);
+}
+
+.back-to-activity-btn {
+    font-size: 0.8rem;
+}
+</style>
+<script src="{{ url_for('static', filename='attendance/js/dashboard.js') }}"></script>
+{% endblock %}

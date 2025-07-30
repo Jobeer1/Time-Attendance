@@ -1,0 +1,25 @@
+{% extends "attendance/base.html" %}
+
+{% block title %}Reports Test - Time Attendance Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <h1>Reports Test Page</h1>
+    <p>This is a test to see if the basic template loads.</p>
+    
+    <div class="alert alert-info">
+        <strong>Debug Info:</strong>
+        <ul>
+            <li>Stats: {{ stats }}</li>
+            <li>Employees count: {{ employees|length }}</li>
+            <li>Departments count: {{ departments|length }}</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+console.log('Test page loaded successfully');
+</script>
+{% endblock %}

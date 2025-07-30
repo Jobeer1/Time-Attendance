@@ -1,0 +1,45 @@
+# Build Requirements for Dr Stoyanov Time Attendance System
+# These are the dependencies needed for creating the .exe file
+
+# Core build tools
+pyinstaller>=5.0
+pillow>=9.0.0
+
+# Application dependencies (will be bundled in exe)
+flask>=2.0.0
+werkzeug>=2.0.0
+jinja2>=3.0.0
+markupsafe>=2.0.0
+click>=8.0.0
+itsdangerous>=2.0.0
+
+# Security and SSL
+cryptography>=3.0.0
+pyopenssl>=22.0.0
+
+# Face recognition and computer vision
+face-recognition>=1.3.0
+opencv-python>=4.5.0
+numpy>=1.21.0
+dlib>=19.22.0
+
+# Image processing
+pillow>=9.0.0
+imageio>=2.15.0
+
+# HTTP requests
+requests>=2.25.0
+urllib3>=1.26.0
+
+# Additional utilities
+python-dateutil>=2.8.0
+six>=1.16.0
+setuptools>=60.0.0
+wheel>=0.37.0
+
+# Windows-specific (for proper exe creation)
+pywin32>=227; sys_platform == "win32"
+pywin32-ctypes>=0.2.0; sys_platform == "win32"
+
+# Optional but recommended for better performance
+numba>=0.56.0

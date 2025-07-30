@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MAC Address Test</title>
+    <script>
+        async function testMacLookup() {
+            const ipAddress = '192.168.1.1';
+            
+            try {
+                console.log('Testing MAC lookup for:', ipAddress);
+                
+                const response = await fetch('/admin/terminal-management/api/get-mac-address', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ ip_address: ipAddress })
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                const result = await response.json();
+                console.log('Response data:', result);
+                
+                if (result.success && result.mac_address) {
+                    document.getElementById('result').innerHTML = `<strong>Success:</strong> MAC address found: ${result.mac_address}`;
+                } else {
+                    document.getElementById('result').innerHTML = `<strong>Warning:</strong> ${result.message || 'Could not retrieve MAC address'}`;
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = `<strong>Error:</strong> ${error.message}`;
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>MAC Address Lookup Test</h1>
+    <button onclick="testMacLookup()">Test MAC Lookup</button>
+    <div id="result"></div>
+</body>
+</html>

@@ -1,0 +1,163 @@
+{
+  "d240bdf2-6613-4fad-a1dc-69abb2e38e08": {
+    "folder_id": "d240bdf2-6613-4fad-a1dc-69abb2e38e08",
+    "folder_name": "Test Medical Folder",
+    "total_files": 0,
+    "total_size": 181,
+    "uploaded_by": "EMP01",
+    "upload_timestamp": "2025-07-17T08:38:01.139734",
+    "status": "uploading",
+    "files": [
+      {
+        "file_id": "04015d91-ed91-4a44-8b76-ecf911462a2b",
+        "relative_path": "readme.txt",
+        "original_name": "readme.txt",
+        "file_size": 22,
+        "mime_type": "text/plain",
+        "md5_hash": "12691b577a6c08e0eb90eb57d1c1fd4f",
+        "upload_timestamp": "2025-07-17T08:38:03.613277",
+        "is_processed": true,
+        "processing_error": null
+      },
+      {
+        "file_id": "0fcb61d2-788d-442f-8089-ba5c853c92ca",
+        "relative_path": "medical_images\\dicom\\scan1.dcm",
+        "original_name": "scan1.dcm",
+        "file_size": 31,
+        "mime_type": "application/octet-stream",
+        "md5_hash": "0cf73bd856e2ff1e8c6beac4075e1503",
+        "upload_timestamp": "2025-07-17T08:38:05.677655",
+        "is_processed": true,
+        "processing_error": null
+      },
+      {
+        "file_id": "5cfd4dd6-0241-4162-8701-2b4432e94902",
+        "relative_path": "medical_images\\dicom\\scan2.dcm",
+        "original_name": "scan2.dcm",
+        "file_size": 31,
+        "mime_type": "application/octet-stream",
+        "md5_hash": "1e753d141ad2582988fbbe9f6a8c86bf",
+        "upload_timestamp": "2025-07-17T08:38:07.825010",
+        "is_processed": true,
+        "processing_error": null
+      },
+      {
+        "file_id": "1243085a-19fe-4a92-b94e-dd954f0c9c2a",
+        "relative_path": "medical_images\\mri\\brain_scan.nii",
+        "original_name": "brain_scan.nii",
+        "file_size": 21,
+        "mime_type": "application/octet-stream",
+        "md5_hash": "18f3ae4240f8c35c3a6f9c67b9e3876f",
+        "upload_timestamp": "2025-07-17T08:38:09.901870",
+        "is_processed": true,
+        "processing_error": null
+      },
+      {
+        "file_id": "44160e20-e264-4bd8-89c9-0780d4f70f89",
+        "relative_path": "documents\\policies\\hipaa_policy.doc",
+        "original_name": "hipaa_policy.doc",
+        "file_size": 23,
+        "mime_type": "application/msword",
+        "md5_hash": "42e4aff7383c8ceae7403e6289a2e29e",
+        "upload_timestamp": "2025-07-17T08:38:11.985262",
+        "is_processed": true,
+        "processing_error": null
+      },
+      {
+        "file_id": "335f8be1-36f7-404e-8acd-765c42de9378",
+        "relative_path": "documents\\reports\\analysis.txt",
+        "original_name": "analysis.txt",
+        "file_size": 23,
+        "mime_type": "text/plain",
+        "md5_hash": "775829d693bb076b920efd2a9c7fb380",
+        "upload_timestamp": "2025-07-17T08:38:14.103595",
+        "is_processed": true,
+        "processing_error": null
+      },
+      {
+        "file_id": "f2c2efa2-ceeb-49aa-b5bc-b4799163215c",
+        "relative_path": "documents\\reports\\patient_report.pdf",
+        "original_name": "patient_report.pdf",
+        "file_size": 30,
+        "mime_type": "application/pdf",
+        "md5_hash": "0e06b1e4367ec5c394d880fa1075fc60",
+        "upload_timestamp": "2025-07-17T08:38:16.265560",
+        "is_processed": true,
+        "processing_error": null
+      }
+    ],
+    "folder_structure": {
+      "files": [
+        {
+          "name": "readme.txt",
+          "path": "readme.txt",
+          "size": 22
+        }
+      ],
+      "folders": {
+        "medical_images": {
+          "folders": {
+            "dicom": {
+              "files": [
+                {
+                  "name": "scan1.dcm",
+                  "path": "medical_images\\dicom\\scan1.dcm",
+                  "size": 31
+                },
+                {
+                  "name": "scan2.dcm",
+                  "path": "medical_images\\dicom\\scan2.dcm",
+                  "size": 31
+                }
+              ]
+            },
+            "mri": {
+              "files": [
+                {
+                  "name": "brain_scan.nii",
+                  "path": "medical_images\\mri\\brain_scan.nii",
+                  "size": 21
+                }
+              ]
+            }
+          }
+        },
+        "documents": {
+          "folders": {
+            "policies": {
+              "files": [
+                {
+                  "name": "hipaa_policy.doc",
+                  "path": "documents\\policies\\hipaa_policy.doc",
+                  "size": 23
+                }
+              ]
+            },
+            "reports": {
+              "files": [
+                {
+                  "name": "analysis.txt",
+                  "path": "documents\\reports\\analysis.txt",
+                  "size": 23
+                },
+                {
+                  "name": "patient_report.pdf",
+                  "path": "documents\\reports\\patient_report.pdf",
+                  "size": 30
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "compression_level": "balanced",
+    "compressed_size": null,
+    "compression_ratio": null,
+    "download_count": 0,
+    "last_accessed": null,
+    "expires_at": "2025-08-16T08:38:01.139760",
+    "processing_progress": 0.0,
+    "error_message": null
+  }
+}

@@ -1,0 +1,505 @@
+{% extends "attendance/base.html" %}
+
+{% block title %}Reports - Time Attendance Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0"><i class="fas fa-chart-bar me-2"></i>Reports & Analytics</h1>
+                    <p class="text-muted">Generate and view attendance reports and analytics</p>
+                </div>
+                <div>
+                    <button class="btn btn-primary" onclick="exportReport()">
+                        <i class="fas fa-download me-2"></i>Export Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ stats.total_employees or 0 }}</h4>
+                            <p class="mb-0">Total Employees</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ stats.present_today or 0 }}</h4>
+                            <p class="mb-0">Present Today</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-check fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ stats.late_today or 0 }}</h4>
+                            <p class="mb-0">Late Today</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ stats.absent_today or 0 }}</h4>
+                            <p class="mb-0">Absent Today</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-times fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Filters -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Report Filters</h5>
+        </div>
+        <div class="card-body">
+            <form id="reportFilters">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label for="reportType" class="form-label">Report Type</label>
+                        <select class="form-select" id="reportType" name="reportType">
+                            <option value="daily">Daily Summary</option>
+                            <option value="weekly">Weekly Summary</option>
+                            <option value="monthly">Monthly Summary</option>
+                            <option value="employee">Employee Details</option>
+                            <option value="department">Department Summary</option>
+                            <option value="overtime">Overtime Report</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="startDate" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="startDate" name="startDate" value="{{ default_start_date }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="endDate" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="endDate" name="endDate" value="{{ default_end_date }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="employeeFilter" class="form-label">Employee</label>
+                        <select class="form-select" id="employeeFilter" name="employeeFilter">
+                            <option value="">All Employees</option>
+                            {% for employee in employees %}
+                            <option value="{{ employee.employee_id }}">{{ employee.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="departmentFilter" class="form-label">Department</label>
+                        <select class="form-select" id="departmentFilter" name="departmentFilter">
+                            <option value="">All Departments</option>
+                            {% for dept in departments %}
+                            <option value="{{ dept }}">{{ dept }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end">
+                        <button type="button" class="btn btn-primary w-100" onclick="generateReport()">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Report Results -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-table me-2"></i>Report Results</h5>
+            <div>
+                <button class="btn btn-sm btn-outline-primary" onclick="printReport()">
+                    <i class="fas fa-print me-1"></i>Print
+                </button>
+                <button class="btn btn-sm btn-outline-success" onclick="exportToExcel()">
+                    <i class="fas fa-file-excel me-1"></i>Excel
+                </button>
+                <button class="btn btn-sm btn-outline-danger" onclick="exportToPDF()">
+                    <i class="fas fa-file-pdf me-1"></i>PDF
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div id="reportLoading" class="text-center py-4" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Generating report...</p>
+            </div>
+            
+            <div id="reportResults">
+                <div class="text-center py-5 text-muted">
+                    <i class="fas fa-chart-bar fa-3x mb-3"></i>
+                    <h5>Select filters and click search to generate a report</h5>
+                    <p>Choose your report type, date range, and filters above</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Attendance Trends</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="attendanceChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Department Breakdown</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="departmentChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Templates - Using simple HTML templates -->
+<div id="dailySummaryTemplate" style="display: none;">
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Date</th>
+                    <th>Total Employees</th>
+                    <th>Present</th>
+                    <th>Absent</th>
+                    <th>Late</th>
+                    <th>Overtime Hours</th>
+                    <th>Attendance Rate</th>
+                </tr>
+            </thead>
+            <tbody id="summaryTableBody">
+                <!-- Dynamic content will be inserted here -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="employeeDetailsTemplate" style="display: none;">
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Employee ID</th>
+                    <th>Name</th>
+                    <th>Department</th>
+                    <th>Days Present</th>
+                    <th>Days Absent</th>
+                    <th>Late Days</th>
+                    <th>Total Hours</th>
+                    <th>Overtime Hours</th>
+                    <th>Attendance Rate</th>
+                </tr>
+            </thead>
+            <tbody id="employeeTableBody">
+                <!-- Dynamic content will be inserted here -->
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let attendanceChart = null;
+let departmentChart = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize charts
+    initializeCharts();
+    
+    // Auto-generate initial report
+    generateReport();
+});
+
+function initializeCharts() {
+    // Attendance Trends Chart
+    const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
+    attendanceChart = new Chart(attendanceCtx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Attendance Rate',
+                data: [],
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+
+    // Department Breakdown Chart
+    const departmentCtx = document.getElementById('departmentChart').getContext('2d');
+    departmentChart = new Chart(departmentCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [],
+            datasets: [{
+                data: [],
+                backgroundColor: [
+                    '#FF6384',
+                    '#36A2EB',
+                    '#FFCE56',
+                    '#4BC0C0',
+                    '#9966FF',
+                    '#FF9F40',
+                    '#FF6384',
+                    '#C9CBCF'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+}
+
+function generateReport() {
+    const formData = new FormData(document.getElementById('reportFilters'));
+    const params = new URLSearchParams(formData);
+    
+    document.getElementById('reportLoading').style.display = 'block';
+    document.getElementById('reportResults').innerHTML = '';
+    
+    fetch(`/admin/api/reports/attendance?${params}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('reportLoading').style.display = 'none';
+            
+            if (data.success) {
+                displayReport(data.report, params.get('reportType'));
+                updateCharts(data.report);
+            } else {
+                showError(data.message || 'Failed to generate report');
+            }
+        })
+        .catch(error => {
+            document.getElementById('reportLoading').style.display = 'none';
+            showError('Error generating report: ' + error.message);
+        });
+}
+
+function displayReport(reportData, reportType) {
+    const resultsContainer = document.getElementById('reportResults');
+    
+    if (reportType === 'employee') {
+        resultsContainer.innerHTML = document.getElementById('employeeDetailsTemplate').innerHTML;
+        populateEmployeeTable(reportData.employees || []);
+    } else {
+        resultsContainer.innerHTML = document.getElementById('dailySummaryTemplate').innerHTML;
+        populateSummaryTable(reportData.summary || []);
+    }
+}
+
+function populateEmployeeTable(employees) {
+    const tbody = document.getElementById('employeeTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    employees.forEach(employee => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${employee.employeeId || 'N/A'}</td>
+            <td>${employee.name || 'N/A'}</td>
+            <td>${employee.department || 'N/A'}</td>
+            <td><span class="badge bg-success">${employee.daysPresent || 0}</span></td>
+            <td><span class="badge bg-danger">${employee.daysAbsent || 0}</span></td>
+            <td><span class="badge bg-warning">${employee.lateDays || 0}</span></td>
+            <td>${employee.totalHours || 0}</td>
+            <td>${employee.overtimeHours || 0}</td>
+            <td>
+                <div class="progress" style="height: 20px;">
+                    <div class="progress-bar" style="width: ${employee.attendanceRate || 0}%">${employee.attendanceRate || 0}%</div>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function populateSummaryTable(summaryData) {
+    const tbody = document.getElementById('summaryTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    summaryData.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${item.date || 'N/A'}</td>
+            <td>${item.totalEmployees || 0}</td>
+            <td><span class="badge bg-success">${item.present || 0}</span></td>
+            <td><span class="badge bg-danger">${item.absent || 0}</span></td>
+            <td><span class="badge bg-warning">${item.late || 0}</span></td>
+            <td>${item.overtimeHours || 0}</td>
+            <td>
+                <div class="progress" style="height: 20px;">
+                    <div class="progress-bar" style="width: ${item.attendanceRate || 0}%">${item.attendanceRate || 0}%</div>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function updateCharts(reportData) {
+    // Update attendance trends chart
+    if (reportData.trends) {
+        attendanceChart.data.labels = reportData.trends.dates || [];
+        attendanceChart.data.datasets[0].data = reportData.trends.attendanceRates || [];
+        attendanceChart.update();
+    }
+    
+    // Update department chart
+    if (reportData.departments) {
+        departmentChart.data.labels = Object.keys(reportData.departments);
+        departmentChart.data.datasets[0].data = Object.values(reportData.departments);
+        departmentChart.update();
+    }
+}
+
+function showError(message) {
+    document.getElementById('reportResults').innerHTML = `
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            ${message}
+        </div>
+    `;
+}
+
+function exportReport() {
+    const reportType = document.getElementById('reportType').value;
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    
+    window.open(`/admin/api/reports/export?type=${reportType}&start_date=${startDate}&end_date=${endDate}`, '_blank');
+}
+
+function printReport() {
+    const printContent = document.getElementById('reportResults').innerHTML;
+    const originalContent = document.body.innerHTML;
+    
+    document.body.innerHTML = `
+        <div class="print-header">
+            <h2>Time Attendance Report</h2>
+            <p>Generated on: ${new Date().toLocaleDateString()}</p>
+        </div>
+        ${printContent}
+    `;
+    
+    window.print();
+    document.body.innerHTML = originalContent;
+    location.reload();
+}
+
+function exportToExcel() {
+    showAlert('Excel export functionality coming soon!', 'info');
+}
+
+function exportToPDF() {
+    showAlert('PDF export functionality coming soon!', 'info');
+}
+
+function showAlert(message, type = 'info') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.parentNode.removeChild(alertDiv);
+        }
+    }, 5000);
+}
+</script>
+
+<style>
+.print-header {
+    text-align: center;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #333;
+    padding-bottom: 10px;
+}
+
+@media print {
+    .btn, .card-header .btn-group, .no-print {
+        display: none !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .table {
+        font-size: 12px;
+    }
+}
+</style>
+{% endblock %}

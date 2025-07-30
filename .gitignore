@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Distribution / Build
+build/
+dist/
+*.exe
+*.bak
+*.log
+*.env
+*.spec
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+
+# OS / Misc
+.DS_Store
+Thumbs.db
+
+# Face recognition models (if large)
+face_recognition_models/
+
+# Sensitive files
+*.pem
+*.key
+network_settings.json

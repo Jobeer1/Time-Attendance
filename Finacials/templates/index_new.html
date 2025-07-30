@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PDF to Excel/CSV Converter - Enhanced</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+<div class="container">
+    <h2>📊 PDF to Excel/CSV Converter</h2>
+    <p style="text-align: center; color: #666; margin-bottom: 30px;">
+        Convert financial PDFs to structured CSV/Excel files with enhanced OCR
+    </p>
+    
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="msg">{{ messages[0] }}</div>
+      {% endif %}
+    {% endwith %}
+    
+    <!-- NEW: Direct PDF to CSV (Recommended) -->
+    <div class="batch-section" style="border-left-color: #28a745;">
+        <h3>🚀 Recommended: Direct PDF to CSV</h3>
+        <p style="color: #666; margin-bottom: 20px;">
+            <strong>Enhanced OCR processing</strong> - Converts PDFs directly to structured CSV matching financial report format
+        </p>
+        
+        <form method="post" action="/pdf_to_csv" enctype="multipart/form-data" id="pdf-to-csv-form">
+            <label for="pdf_file_csv">Single PDF to Structured CSV:</label>
+            <input type="file" id="pdf_file_csv" name="pdf_file" accept="application/pdf" required>
+            <label for="output_name_csv">Output file name (without extension):</label>
+            <input type="text" id="output_name_csv" name="output_name" placeholder="e.g. financial_report" required>
+            <button type="submit" id="pdf-to-csv-button" class="primary-btn">Convert PDF to CSV</button>
+            
+            <div class="progress-container" id="progress-container-csv">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill-csv"></div>
+                </div>
+                <div class="progress-text" id="progress-text-csv">Processing PDF with enhanced OCR...</div>
+            </div>
+        </form>
+        
+        <form method="post" action="/batch_pdf_to_csv" enctype="multipart/form-data" id="batch-pdf-to-csv-form">
+            <label for="pdf_files_csv_batch">Multiple PDFs to Structured CSV:</label>
+            <input type="file" id="pdf_files_csv_batch" name="pdf_files" accept="application/pdf" multiple required>
+            <label for="output_name_csv_batch">Output file name (without extension):</label>
+            <input type="text" id="output_name_csv_batch" name="output_name" placeholder="e.g. batch_financial_reports" required>
+            <button type="submit" id="batch-pdf-to-csv-button" class="primary-btn">Convert All PDFs to CSV</button>
+            
+            <div class="progress-container" id="progress-container-csv-batch">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill-csv-batch"></div>
+                </div>
+                <div class="progress-text" id="progress-text-csv-batch">Processing multiple PDFs...</div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Direct Image to CSV (Most Efficient) -->
+    <div class="form-section">
+        <h3>🚀 Direct Image to CSV (Fastest Method)</h3>
+        <p>Upload scanned images directly for the fastest and most accurate conversion.</p>
+        
+        <form method="post" action="/image_to_csv" enctype="multipart/form-data" id="image-to-csv-form">
+            <label for="image_file">Single Image to CSV:</label>
+            <input type="file" id="image_file" name="image_file" accept="image/*" required>
+            <label for="output_name_image">Output file name (without extension):</label>
+            <input type="text" id="output_name_image" name="output_name" placeholder="e.g. scan_001" required>
+            <button type="submit" id="image-to-csv-button">Convert Image to CSV</button>
+            
+            <div class="progress-container" id="progress-container-image">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill-image"></div>
+                </div>
+                <div class="progress-text" id="progress-text-image">Processing image...</div>
+            </div>
+        </form>
+        
+        <form method="post" action="/batch_image_to_csv" enctype="multipart/form-data" id="batch-image-to-csv-form">
+            <label for="image_files_batch">Multiple Images to CSV:</label>
+            <input type="file" id="image_files_batch" name="image_files" accept="image/*" multiple required>
+            <label for="output_name_image_batch">Output file name (without extension):</label>
+            <input type="text" id="output_name_image_batch" name="output_name" placeholder="e.g. batch_scans" required>
+            <button type="submit" id="batch-image-to-csv-button">Convert All Images to CSV</button>
+            
+            <div class="progress-container" id="progress-container-image-batch">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill-image-batch"></div>
+                </div>
+                <div class="progress-text" id="progress-text-image-batch">Processing images...</div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Optimized PDF to CSV (New Pipeline) -->
+    <div class="form-section">
+        <h3>📄 Optimized PDF to CSV</h3>
+        <p>Enhanced pipeline: PDF → Images → Text → Structured CSV</p>
+        
+        <form method="post" action="/pdf_to_csv" enctype="multipart/form-data" id="pdf-to-csv-form">
+            <label for="pdf_file_csv_new">Single PDF to CSV (Optimized):</label>
+            <input type="file" id="pdf_file_csv_new" name="pdf_file" accept="application/pdf" required>
+            <label for="output_name_csv_new">Output file name (without extension):</label>
+            <input type="text" id="output_name_csv_new" name="output_name" placeholder="e.g. report_2025" required>
+            <button type="submit" id="pdf-to-csv-new-button">Convert PDF to CSV</button>
+            
+            <div class="progress-container" id="progress-container-csv-new">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill-csv-new"></div>
+                </div>
+                <div class="progress-text" id="progress-text-csv-new">Converting PDF...</div>
+            </div>
+        </form>
+        
+        <form method="post" action="/batch_pdf_to_csv" enctype="multipart/form-data" id="batch-pdf-to-csv-form-new">
+            <label for="pdf_files_csv_batch_new">Multiple PDFs to CSV (Optimized):</label>
+            <input type="file" id="pdf_files_csv_batch_new" name="pdf_files" accept="application/pdf" multiple required>
+            <label for="output_name_csv_batch_new">Output file name (without extension):</label>
+            <input type="text" id="output_name_csv_batch_new" name="output_name" placeholder="e.g. batch_reports_2025" required>
+            <button type="submit" id="batch-pdf-to-csv-new-button">Convert All PDFs to CSV</button>
+            
+            <div class="progress-container" id="progress-container-csv-batch-new">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill-csv-batch-new"></div>
+                </div>
+                <div class="progress-text" id="progress-text-csv-batch-new">Processing multiple PDFs...</div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Legacy Methods -->
+    <div class="form-section">
+        <h3>🔧 Legacy Methods (For Testing)</h3>
+    <form method="post" action="/extract_text" enctype="multipart/form-data" id="extract-text-form">
+        <label for="pdf_file_step2">Step 2: Extract Text from PDF (Hybrid OCR):</label>
+        <input type="file" id="pdf_file_step2" name="pdf_file" accept="application/pdf" required>
+        <label for="output_name2">Output file name (without extension):</label>
+        <input type="text" id="output_name2" name="output_name" placeholder="e.g. extracted_text" required>
+        <button type="submit" id="extract-text-button">Extract Text from PDF</button>
+        
+        <div class="progress-container" id="progress-container-2">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill-2"></div>
+            </div>
+            <div class="progress-text" id="progress-text-2">Starting text extraction...</div>
+        </div>
+    </form>
+
+    <!-- Text from Images -->
+    <form method="post" action="/extract_text_from_images" enctype="multipart/form-data" id="extract-text-from-images-form">
+        <label for="zip_file_step25">Step 2.5: Extract Text from ZIP of Images:</label>
+        <input type="file" id="zip_file_step25" name="zip_file" accept=".zip" required>
+        <label for="output_name25">Output file name (without extension):</label>
+        <input type="text" id="output_name25" name="output_name" placeholder="e.g. ocr_text" required>
+        <button type="submit" id="extract-text-from-images-button">Extract Text from Images</button>
+        
+        <div class="progress-container" id="progress-container-25">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill-25"></div>
+            </div>
+            <div class="progress-text" id="progress-text-25">Starting OCR extraction...</div>
+        </div>
+    </form>
+
+    <!-- More Batch Operations -->
+    <div class="batch-section">
+        <h3>📦 More Batch Operations</h3>
+        
+        <form method="post" action="/batch_extract_text_from_zips" enctype="multipart/form-data" id="batch-zip-form">
+            <label for="zip_files_batch">Extract Text from Multiple ZIP Files:</label>
+            <input type="file" id="zip_files_batch" name="zip_files" accept=".zip" multiple required>
+            <label for="output_name_batch2">Output file name (without extension):</label>
+            <input type="text" id="output_name_batch2" name="output_name" placeholder="e.g. batch_ocr" required>
+            <button type="submit" id="batch-zip-button">Extract Text from All ZIPs</button>
+            
+            <div class="progress-container" id="progress-container-batch2">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill-batch2"></div>
+                </div>
+                <div class="progress-text" id="progress-text-batch2">Starting batch OCR...</div>
+            </div>
+        </form>
+
+        <form method="post" action="/batch_extract_text_from_images" enctype="multipart/form-data" id="batch-images-form">
+            <label for="image_files_batch">Extract Text from Multiple Image Files:</label>
+            <input type="file" id="image_files_batch" name="image_files" accept=".png,.jpg,.jpeg,.tiff,.bmp,.gif" multiple required>
+            <label for="output_name_batch3">Output file name (without extension):</label>
+            <input type="text" id="output_name_batch3" name="output_name" placeholder="e.g. batch_images_ocr" required>
+            <button type="submit" id="batch-images-button">Extract Text from All Images</button>
+            
+            <div class="progress-container" id="progress-container-batch3">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill-batch3"></div>
+                </div>
+                <div class="progress-text" id="progress-text-batch3">Starting batch image OCR...</div>
+            </div>
+        </form>
+    </div>
+
+    <!-- CSV Processing -->
+    <form method="post" action="/convert_csv" enctype="multipart/form-data" id="convert-csv-form">
+        <label for="txt_file_step3">Step 3: Convert Text to CSV (Raw):</label>
+        <input type="file" id="txt_file_step3" name="txt_file" accept=".txt" required>
+        <label for="output_name3">Output file name (without extension):</label>
+        <input type="text" id="output_name3" name="output_name" placeholder="e.g. raw_csv" required>
+        <button type="submit" id="convert-csv-button">Convert to CSV</button>
+    </form>
+
+    <form method="post" action="/clean_csv" enctype="multipart/form-data" id="clean-csv-form">
+        <label for="csv_file_step4">Step 4: Clean CSV (Gold Standard):</label>
+        <input type="file" id="csv_file_step4" name="csv_file" accept=".csv" required>
+        <label for="output_name4">Output file name (without extension):</label>
+        <input type="text" id="output_name4" name="output_name" placeholder="e.g. cleaned_accounts" required>
+        <button type="submit" id="clean-csv-button">Clean CSV Data</button>
+    </form>
+
+    <form method="post" action="/convert_xls" enctype="multipart/form-data" id="convert-xls-form">
+        <label for="csv_file_step5">Step 5: Convert to Excel:</label>
+        <input type="file" id="csv_file_step5" name="csv_file" accept=".csv" required>
+        <label for="output_name5">Output file name (without extension):</label>
+        <input type="text" id="output_name5" name="output_name" placeholder="e.g. final_accounts" required>
+        <button type="submit" id="convert-xls-button">Convert to Excel</button>
+    </form>
+</div>
+
+<script src="{{ url_for('static', filename='js/progress.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,1671 @@
+{% extends "attendance/base.html" %}
+{% set is_terminal_mode = true %}
+
+{% block title %}Terminal - Time Attendance{% endblock %}
+{% block body_class %}terminal-mode{% endblock %}
+
+{% block content %}
+<div class="terminal-container">
+    <div class="terminal-header">        <!-- Dr Stoyanov Radiology Trademark -->
+        <div class="text-center mb-3 trademark-header">
+            <h2 class="display-6 fw-light mb-1" style="font-family: 'Georgia', serif; letter-spacing: 1px; color: white !important;">
+                Dr Stoyanov Radiology
+            </h2>
+            <div class="trademark-line mx-auto mb-3" style="width: 180px; height: 2px; background: linear-gradient(to right, #0d6efd, #6610f2);"></div>
+        </div>
+        
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="terminal-title">
+                    <i class="fas fa-clock me-3"></i>
+                    Quick Time Clock
+                </h1>
+                <p class="terminal-subtitle">Fast & Easy Employee Check-In</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="current-time-display">
+                    <div class="time" id="terminalTime"></div>
+                    <div class="date" id="terminalDate"></div>
+                </div>
+            </div>
+        </div>
+    </div>    <div class="terminal-body">
+        <div class="row">
+            <!-- Quick Authentication Section -->
+            <div class="col-lg-6">
+                <div class="card terminal-card">
+                    <div class="card-body">
+                        <h3 class="card-title">
+                            <i class="fas fa-rocket me-2"></i>
+                            Quick Login
+                        </h3>
+                          <!-- Single Form - Progressive Authentication -->
+                        <div id="authenticationForm">
+                            <!-- FACE TRACKING TEST BUTTONS - Always Visible -->
+                            <div class="alert alert-warning mb-4" style="position: relative; z-index: 1000;">
+                                <h5 class="alert-heading">
+                                    <i class="fas fa-eye me-2"></i>Face Tracking Test Mode
+                                </h5>
+                                <p class="mb-3">
+                                    <strong>Test if face tracking visual markers are working correctly.</strong>
+                                    <br>Start camera first, then click "Test Face Tracking" to see visual markers.
+                                </p>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button type="button" id="testFaceTrackingBtn" class="btn btn-warning btn-lg shadow pulse">
+                                        <i class="fas fa-search me-2"></i>Test Face Tracking
+                                    </button>
+                                    <button type="button" id="stopFaceTrackingBtn" class="btn btn-danger btn-lg shadow d-none">
+                                        <i class="fas fa-stop me-2"></i>Stop Tracking
+                                    </button>                                </div>
+                            </div>
+                            
+                            <!-- Face Tracking Status - Always Visible -->
+                            <div class="mt-3">
+                                <div class="alert alert-secondary d-none" id="faceTrackingStatus">
+                                    <div class="d-flex align-items-center">
+                                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status" style="display: none;" id="trackingSpinner">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <i class="fas fa-eye text-success me-2" style="display: none;" id="trackingActiveIcon"></i>
+                                        <span id="trackingStatusText">Face tracking inactive</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Face Tracking Information - Always Visible -->
+                            <div class="face-tracking-info mt-3" style="display: none;" id="faceTrackingInfo">
+                                <div class="alert alert-info">
+                                    <div class="d-flex align-items-start">
+                                        <i class="fas fa-video text-primary me-3 mt-1"></i>
+                                        <div>
+                                            <h6 class="alert-heading mb-2">Enhanced Face Tracking Active</h6>
+                                            <ul class="mb-0 small">
+                                                <li><strong>Green Box:</strong> Perfect face detection</li>
+                                                <li><strong>Yellow Box:</strong> Good detection, minor adjustments needed</li>
+                                                <li><strong>Orange Box:</strong> Improve positioning or lighting</li>
+                                                <li><strong>Eye/Nose/Mouth Dots:</strong> Face landmark tracking</li>
+                                                <li><strong>Quality Panel:</strong> Live feedback on face positioning</li>
+                                                <li><strong>Guidance Panel:</strong> Real-time recommendations</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <form id="quickAuthForm">
+                                <!-- Step 1: Employee ID (Required) -->
+                                <div class="auth-step" id="step1">                                    <div class="mb-3">
+                                        <label for="employee-id-input" class="form-label">
+                                            <i class="fas fa-id-card me-1"></i>
+                                            Employee ID <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="text" id="employee-id-input" class="form-control form-control-lg" 
+                                               placeholder="Enter your Employee ID" required>
+                                        <div class="form-text">Start by entering your Employee ID</div>
+                                    </div>
+                                </div>
+
+                                <!-- Step 2: PIN (Optional) -->
+                                <div class="auth-step d-none" id="step2">
+                                    <div class="mb-3">
+                                        <label for="pinCode" class="form-label">
+                                            <i class="fas fa-key me-1"></i>
+                                            PIN <span class="text-muted">(Optional)</span>
+                                        </label>                                        <input type="password" id="pinCode" class="form-control form-control-lg text-center" 
+                                               maxlength="4" placeholder="Enter PIN or skip">
+                                        <div class="form-text">Enter your 4-digit PIN for extra security, or skip this step</div>
+                                    </div>
+                                    
+                                    <!-- Virtual Keypad -->
+                                    <div class="virtual-keypad">
+                                        <div class="row g-2">
+                                            <div class="col-4"><button type="button" class="btn btn-outline-primary btn-lg w-100 keypad-btn" data-key="1">1</button></div>
+                                            <div class="col-4"><button type="button" class="btn btn-outline-primary btn-lg w-100 keypad-btn" data-key="2">2</button></div>
+                                            <div class="col-4"><button type="button" class="btn btn-outline-primary btn-lg w-100 keypad-btn" data-key="3">3</button></div>
+                                            <div class="col-4"><button type="button" class="btn btn-outline-primary btn-lg w-100 keypad-btn" data-key="4">4</button></div>
+                                            <div class="col-4"><button type="button" class="btn btn-outline-primary btn-lg w-100 keypad-btn" data-key="5">5</button></div>
+                                            <div class="col-4"><button type="button" class="btn btn-outline-primary btn-lg w-100 keypad-btn" data-key="6">6</button></div>
+                                            <div class="col-4"><button type="button" class="btn btn-outline-primary btn-lg w-100 keypad-btn" data-key="7">7</button></div>
+                                            <div class="col-4"><button type="button" class="btn btn-outline-primary btn-lg w-100 keypad-btn" data-key="8">8</button></div>
+                                            <div class="col-4"><button type="button" class="btn btn-outline-primary btn-lg w-100 keypad-btn" data-key="9">9</button></div>
+                                            <div class="col-4"><button type="button" class="btn btn-outline-secondary btn-lg w-100 keypad-btn" data-key="clear">Clear</button></div>
+                                            <div class="col-4"><button type="button" class="btn btn-outline-primary btn-lg w-100 keypad-btn" data-key="0">0</button></div>
+                                            <div class="col-4"><button type="button" class="btn btn-outline-warning btn-lg w-100" id="skipPin">Skip</button></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Step 3: Photo (Optional) -->
+                                <div class="auth-step d-none" id="step3">
+                                    <div class="mb-3">
+                                        <label class="form-label">
+                                            <i class="fas fa-camera me-1"></i>
+                                            Photo Verification <span class="text-muted">(Optional)</span>
+                                        </label>
+                                        <div class="camera-container mb-3">
+                                            <video id="cameraVideo" autoplay muted class="camera-feed d-none"></video>
+                                            <canvas id="captureCanvas" style="display: none;"></canvas>
+                                            <div class="camera-placeholder text-center p-4">
+                                                <i class="fas fa-camera fa-3x text-muted mb-2"></i>
+                                                <p class="text-muted">Optional: Take a photo for extra verification</p>
+                                            </div>
+                                        </div>
+                                          <div class="camera-controls">
+                                            <button type="button" id="startCamera" class="btn btn-primary">
+                                                <i class="fas fa-camera me-2"></i>Start Camera
+                                            </button>
+                                            <button type="button" id="capturePhoto" class="btn btn-success d-none">
+                                                <i class="fas fa-camera-retro me-2"></i>Capture
+                                            </button>
+                                            <button type="button" id="skipPhoto" class="btn btn-outline-warning">
+                                                <i class="fas fa-forward me-2"></i>Skip Photo
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Face Tracking Test Controls -->
+                                        <div class="face-tracking-test-controls mt-3">
+                                            <div class="alert alert-warning border-warning">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <i class="fas fa-eye text-warning me-2"></i>
+                                                    <strong>Face Tracking Test Mode</strong>
+                                                </div>
+                                                <p class="mb-3 small">
+                                                    Test if face tracking visual markers are working correctly.
+                                                    <br><strong>Start camera first, then click "Test Face Tracking"</strong>
+                                                </p>
+                                                <div class="d-flex flex-wrap gap-2">
+                                                    <button type="button" id="testFaceTrackingBtn" class="btn btn-warning btn-sm shadow">
+                                                        <i class="fas fa-search me-2"></i>Test Face Tracking
+                                                    </button>
+                                                    <button type="button" id="stopFaceTrackingBtn" class="btn btn-outline-danger btn-sm shadow d-none">
+                                                        <i class="fas fa-stop me-2"></i>Stop Tracking
+                                                    </button>
+                                                </div>
+                                            </div>                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Face Tracking Status -->
+                                <div class="mt-3">
+                                    <div class="alert alert-secondary d-none" id="faceTrackingStatus">
+                                        <div class="d-flex align-items-center">
+                                            <div class="spinner-border spinner-border-sm text-primary me-2" role="status" style="display: none;" id="trackingSpinner">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <i class="fas fa-eye text-success me-2" style="display: none;" id="trackingActiveIcon"></i>
+                                            <span id="trackingStatusText">Face tracking inactive</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Face Tracking Information -->
+                                <div class="face-tracking-info mt-3" style="display: none;" id="faceTrackingInfo">
+                                    <div class="alert alert-info">
+                                        <div class="d-flex align-items-start">
+                                            <i class="fas fa-video text-primary me-3 mt-1"></i>
+                                            <div>
+                                                <h6 class="alert-heading mb-2">Enhanced Face Tracking Active</h6>
+                                                <ul class="mb-0 small">
+                                                    <li><strong>Green Box:</strong> Perfect face detection</li>
+                                                    <li><strong>Yellow Box:</strong> Good detection, minor adjustments needed</li>
+                                                    <li><strong>Orange Box:</strong> Improve positioning or lighting</li>
+                                                    <li><strong>Eye/Nose/Mouth Dots:</strong> Face landmark tracking</li>
+                                                    <li><strong>Quality Panel:</strong> Live feedback on face positioning</li>
+                                                    <li><strong>Guidance Panel:</strong> Real-time recommendations</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="auth-actions mt-4">
+                                    <button type="button" id="proceedBtn" class="btn btn-success btn-lg w-100" disabled>
+                                        <i class="fas fa-arrow-right me-2"></i>Continue
+                                    </button>
+                                    <button type="button" id="authenticateBtn" class="btn btn-primary btn-lg w-100 d-none">
+                                        <i class="fas fa-sign-in-alt me-2"></i>Authenticate & Continue
+                                    </button>                                    <button type="button" id="resetBtn" class="btn btn-outline-secondary mt-2 w-100">
+                                        <i class="fas fa-refresh me-2"></i>Start Over
+                                    </button>
+                                    
+                                    <!-- Admin Override (Hidden by default) -->
+                                    <div id="adminOverride" class="mt-3 d-none">
+                                        <hr>
+                                        <h6 class="text-muted">Admin Override</h6>
+                                        <button type="button" id="adminBypassBtn" class="btn btn-warning btn-sm w-100">
+                                            <i class="fas fa-key me-2"></i>Admin Bypass Authentication
+                                        </button>
+                                        <small class="text-muted d-block mt-1">For testing and troubleshooting only</small>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Authentication Status -->
+                        <div id="authStatus" class="mt-3 d-none">
+                            <div class="alert alert-info">
+                                <i class="fas fa-spinner fa-spin me-2"></i>
+                                Authenticating...
+                            </div>
+                        </div>
+                        
+                        <!-- Authentication Error -->
+                        <div id="authError" class="mt-3 d-none">
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <span id="authErrorMessage">Authentication failed</span>
+                                <div class="mt-2">
+                                    <button type="button" id="showAdminOptions" class="btn btn-outline-light btn-sm">
+                                        <i class="fas fa-tools me-1"></i>Troubleshoot
+                                    </button>
+                                </div>
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clock In/Out Section -->
+            <div class="col-lg-6">
+                <div class="card terminal-card">
+                    <div class="card-body">
+                        <h3 class="card-title">
+                            <i class="fas fa-clock me-2"></i>
+                            Time Clock
+                        </h3>
+                        
+                        <!-- Welcome Message -->
+                        <div id="welcomeMessage" class="welcome-section text-center">
+                            <i class="fas fa-hand-wave fa-3x text-primary mb-3"></i>
+                            <h4>Welcome!</h4>
+                            <p class="text-muted">Please authenticate to clock in or out</p>
+                        </div>
+
+                        <!-- Employee Status -->
+                        <div id="employeeStatus" class="employee-status d-none">
+                            <div class="employee-info mb-4">
+                                <div class="row align-items-center">
+                                    <div class="col-3">
+                                        <div class="employee-avatar">
+                                            <img id="employeePhoto" src="" alt="Employee Photo" class="rounded-circle">
+                                            <i id="employeePhotoPlaceholder" class="fas fa-user-circle fa-4x text-primary"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-9">
+                                        <h4 id="employeeName" class="mb-1"></h4>
+                                        <p id="employeeId" class="text-muted mb-1"></p>
+                                        <p id="employeeDepartment" class="text-muted mb-0"></p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="current-status mb-4">
+                                <div class="status-badge text-center p-3" id="statusBadge">
+                                    <i class="fas fa-clock me-1"></i>
+                                    <span id="statusText">Ready to Clock In</span>
+                                </div>
+                                <div class="last-action text-center mt-2" id="lastAction"></div>
+                            </div>
+                        </div>
+
+                        <!-- Clock In/Out Buttons -->
+                        <div id="clockActions" class="clock-actions d-none">
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <button id="clockInBtn" class="btn btn-success btn-lg w-100 clock-btn">
+                                        <i class="fas fa-sign-in-alt me-2"></i>
+                                        Clock In
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button id="clockOutBtn" class="btn btn-danger btn-lg w-100 clock-btn">
+                                        <i class="fas fa-sign-out-alt me-2"></i>
+                                        Clock Out
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button id="breakStartBtn" class="btn btn-warning btn-lg w-100 clock-btn">
+                                        <i class="fas fa-coffee me-2"></i>
+                                        Start Break
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button id="breakEndBtn" class="btn btn-info btn-lg w-100 clock-btn">
+                                        <i class="fas fa-play me-2"></i>
+                                        End Break
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button id="leaveManagementBtn" class="btn btn-primary btn-lg w-100 clock-btn" onclick="openLeaveManagement()">
+                                        <i class="fas fa-calendar-check me-2"></i>
+                                        Leave Details
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button id="messagesBtn" class="btn btn-info btn-lg w-100 clock-btn" onclick="openMessages()">
+                                        <i class="fas fa-comments me-2"></i>
+                                        Messages
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button id="shiftInfoBtn" class="btn btn-secondary btn-lg w-100 clock-btn">
+                                        <i class="fas fa-clock me-2"></i>
+                                        Shift Info
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3">
+                                <button id="newActionBtn" class="btn btn-outline-secondary w-100">
+                                    <i class="fas fa-user-plus me-2"></i>
+                                    Different Employee
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auto Logout Timer -->
+    <div id="inactivityWarning" class="position-fixed top-0 end-0 p-3" style="z-index: 1050; display: none;">
+        <div class="alert alert-warning alert-dismissible">
+            <strong>Auto Logout Warning</strong><br>
+            Session will end in <span id="logoutCountdown">30</span> seconds
+            <button type="button" class="btn-close" onclick="cancelAutoLogout()"></button>
+        </div>
+    </div>
+</div>
+
+<!-- Audio for notifications -->
+<audio id="successSound" preload="auto">
+    <source src="/static/attendance/sounds/success.mp3" type="audio/mpeg">
+</audio>
+<audio id="errorSound" preload="auto">
+    <source src="/static/attendance/sounds/error.mp3" type="audio/mpeg">
+</audio>
+
+<style>
+.terminal-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+}
+
+.terminal-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    min-height: 500px;
+}
+
+.camera-feed {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 3px solid #0d6efd;
+}
+
+.camera-placeholder {
+    height: 200px;
+    border: 2px dashed #dee2e6;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.status-badge {
+    background: linear-gradient(45deg, #28a745, #20c997);
+    color: white;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+.status-badge.status-out {
+    background: linear-gradient(45deg, #dc3545, #fd7e14);
+}
+
+.status-badge.status-break {
+    background: linear-gradient(45deg, #ffc107, #fd7e14);
+    color: #212529;
+}
+
+.clock-btn {
+    height: 60px;
+    font-size: 1.1rem;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.clock-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.virtual-keypad .btn {
+    height: 50px;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.auth-step {
+    transition: all 0.3s ease;
+}
+
+.employee-avatar img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+}
+
+@media (max-width: 768px) {
+    .terminal-container {
+        padding: 10px;
+    }
+    
+    .terminal-card {
+        min-height: auto;
+    }
+}
+
+/* Face Tracking Test Button Animations */
+.pulse {
+    animation: pulse-warning 2s infinite;
+}
+
+@keyframes pulse-warning {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 10px rgba(255, 193, 7, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+    }
+}
+
+/* Stop tracking button pulse when active */
+.btn-danger.tracking-active {
+    animation: pulse-danger 1.5s infinite;
+}
+
+@keyframes pulse-danger {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+    }
+    50% {
+        transform: scale(1.03);
+        box-shadow: 0 0 0 8px rgba(220, 53, 69, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+    }
+}
+
+.face-tracking-always-visible {
+    position: relative;
+    z-index: 1000;
+    margin-bottom: 20px;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<!-- Face Tracking and MediaPipe Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js" crossorigin="anonymous"></script>
+<script src="{{ url_for('static', filename='attendance/js/face-tracking.js') }}"></script>
+
+<!-- New Simplified Terminal Script -->
+<script>
+// Simplified Terminal Authentication - Progressive Steps
+let currentStep = 1;
+let employeeData = {};
+let isProcessing = false;
+let currentEmployee = null;
+let terminalId = 'default';
+let inactivityTimer = null;
+let logoutTimer = null;
+
+$(document).ready(function() {
+    // Get terminal ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    terminalId = urlParams.get('terminal_id') || 'default';
+    
+    initializeSimplifiedTerminal();
+    setupEventHandlers();
+    updateTimeDisplay();
+    setInterval(updateTimeDisplay, 1000);
+});
+
+function initializeSimplifiedTerminal() {
+    console.log('Initializing simplified terminal...');
+    
+    // Focus on employee ID input
+    $('#employeeId').focus();
+    
+    // Reset to step 1
+    resetToStep1();
+    
+    // Start inactivity monitoring
+    startInactivityTimer();
+}
+
+function setupEventHandlers() {
+    // Employee ID input
+    $('#employee-id-input').on('input', function() {
+        const employeeId = $(this).val().trim().toUpperCase();
+        $(this).val(employeeId);
+        
+        // Enable proceed button if employee ID is entered
+        if (employeeId.length > 0) {
+            $('#proceedBtn').prop('disabled', false);
+        } else {
+            $('#proceedBtn').prop('disabled', true);
+        }
+    });
+
+    // Proceed button
+    $('#proceedBtn').on('click', proceedToNextStep);
+
+    // Authenticate button
+    $('#authenticateBtn').on('click', performAuthentication);
+
+    // Reset button
+    $('#resetBtn').on('click', resetToStep1);
+
+    // Admin override buttons
+    $('#showAdminOptions').on('click', function() {
+        $('#adminOverride').removeClass('d-none');
+        $('#authError').addClass('d-none');
+    });
+
+    $('#adminBypassBtn').on('click', performAdminBypass);
+
+    // Keypad buttons
+    $('.keypad-btn').on('click', function() {
+        const key = $(this).data('key');
+        const pinInput = $('#pinCode');
+        
+        if (key === 'clear') {
+            pinInput.val('');        } else {
+            const currentPin = pinInput.val();
+            if (currentPin.length < 4) {
+                pinInput.val(currentPin + key);
+            }
+        }
+    });
+
+    // Skip PIN button
+    $('#skipPin').on('click', function() {
+        proceedToNextStep();
+    });
+
+    // Camera controls
+    $('#startCamera').on('click', startCameraForAuth);
+    $('#capturePhoto').on('click', capturePhotoForAuth);
+    $('#skipPhoto').on('click', function() {
+        performAuthentication();
+    });
+
+    // Clock action buttons
+    $('#clockInBtn').on('click', () => performClockAction('clock_in'));
+    $('#clockOutBtn').on('click', () => performClockAction('clock_out'));
+    $('#breakStartBtn').on('click', () => performClockAction('break_start'));
+    $('#breakEndBtn').on('click', () => performClockAction('break_end'));
+
+    // New employee button
+    $('#newActionBtn').on('click', resetToStep1);
+
+    // Shift Info button handler
+    $('#shiftInfoBtn').off('click').on('click', async function() {
+        if (!currentEmployee || !currentEmployee.employee_id) {
+            showAlert('warning', 'Authenticate first to view shift info.');
+            return;
+        }
+        try {
+            const response = await fetch(`/terminal/api/status/${currentEmployee.employee_id}`);
+            const data = await response.json();
+            if (response.ok && data.success && data.shift) {
+                const shift = data.shift;
+                let info = `<strong>Shift Info</strong><br>`;
+                info += `Employee: ${currentEmployee.full_name || currentEmployee.name || 'Unknown'}<br>`;
+                info += `Shift Name: ${shift.name || 'N/A'}<br>`;
+                info += `Start: ${shift.start_time || 'N/A'}<br>`;
+                info += `End: ${shift.end_time || 'N/A'}<br>`;
+                info += `Terminal: ${currentEmployee.terminal_id || 'N/A'}<br>`;
+                showAlert('info', info);
+            } else {
+                showAlert('warning', 'No shift info found for this employee.');
+            }
+        } catch (err) {
+            showAlert('error', 'Error loading shift info.');
+        }
+    });
+    
+    // Enter key support
+    $(document).on('keypress', function(e) {
+        if (e.which === 13) { // Enter key
+            if (currentStep === 1 && !$('#proceedBtn').prop('disabled')) {
+                proceedToNextStep();
+            } else if (currentStep === 2) {
+                proceedToNextStep();
+            } else if (currentStep === 3) {
+                performAuthentication();
+            }
+        }
+    });
+
+    // Reset inactivity timer on any user action
+    $(document).on('click keypress', resetInactivityTimer);
+}
+
+function proceedToNextStep() {
+    if (currentStep === 1) {
+        // Validate employee ID
+        const employeeId = $('#employee-id-input').val().trim();
+        if (!employeeId) {
+            showAlert('Please enter your Employee ID', 'warning');
+            return;
+        }
+        
+        employeeData.employee_id = employeeId;
+        
+        // Move to PIN step
+        showStep(2);
+        $('#pinCode').focus();
+        
+    } else if (currentStep === 2) {
+        // PIN is optional, move to photo step
+        const pin = $('#pinCode').val().trim();
+        if (pin) {
+            employeeData.pin = pin;
+        }
+        
+        showStep(3);
+        
+    } else if (currentStep === 3) {
+        // Photo is optional, proceed to authentication
+        performAuthentication();
+    }
+}
+
+function showStep(stepNumber) {
+    currentStep = stepNumber;
+    
+    // Hide all steps
+    $('.auth-step').addClass('d-none');
+    
+    // Show current step
+    $(`#step${stepNumber}`).removeClass('d-none');
+    
+    // Update buttons
+    if (stepNumber === 1) {
+        $('#proceedBtn').removeClass('d-none');
+        $('#authenticateBtn').addClass('d-none');
+    } else if (stepNumber === 2) {
+        $('#proceedBtn').removeClass('d-none');
+        $('#authenticateBtn').addClass('d-none');
+    } else if (stepNumber === 3) {
+        $('#proceedBtn').addClass('d-none');
+        $('#authenticateBtn').removeClass('d-none');
+    }
+    
+    console.log(`Moved to step ${stepNumber}`);
+}
+
+async function startCameraForAuth() {
+    try {
+        const constraints = {
+            video: {
+                width: { ideal: 640 },
+                height: { ideal: 480 },
+                facingMode: 'user'
+            }
+        };
+        
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        const video = document.getElementById('cameraVideo');
+        video.srcObject = stream;
+        
+        // Show video and hide placeholder
+        $(video).removeClass('d-none');
+        $('.camera-placeholder').addClass('d-none');
+        
+        // Update buttons
+        $('#startCamera').addClass('d-none');
+        $('#capturePhoto').removeClass('d-none');
+        
+        showAlert('Camera started! Position your face and click Capture', 'success');
+        
+    } catch (error) {
+        console.error('Camera error:', error);
+        showAlert('Camera access failed. You can skip this step.', 'warning');
+    }
+}
+
+function capturePhotoForAuth() {
+    const video = document.getElementById('cameraVideo');
+    const canvas = document.getElementById('captureCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Set canvas size to match video
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    // Draw current video frame to canvas
+    ctx.drawImage(video, 0, 0);
+    
+    // Convert to base64
+    const imageData = canvas.toDataURL('image/jpeg', 0.8);
+    employeeData.photo = imageData;
+    
+    // Stop camera
+    const stream = video.srcObject;
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+    }
+    
+    showAlert('Photo captured successfully!', 'success');
+    
+    // Proceed to authentication
+    setTimeout(() => {
+        performAuthentication();
+    }, 1000);
+}
+
+async function performAuthentication() {
+    if (isProcessing) return;
+    
+    isProcessing = true;
+    
+    // Show authentication status
+    $('#authStatus').removeClass('d-none');
+    $('#authenticateBtn').prop('disabled', true);
+    
+    try {
+        // Determine authentication method
+        let method = 'employee_id';
+        let authData = { employee_id: employeeData.employee_id };
+        
+        if (employeeData.pin) {
+            method = 'pin';
+            authData.pin = employeeData.pin;
+        }
+        
+        if (employeeData.photo) {
+            method = 'face_recognition';
+            authData.image_data = employeeData.photo;
+        }
+        
+        console.log('Authenticating with method:', method);
+        
+        const response = await fetch('/terminal/api/authenticate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                method: method,
+                terminal_id: terminalId,
+                ...authData
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.employee) {
+            // Authentication successful
+            currentEmployee = result.employee;
+            currentEmployee.auth_method = method;
+            
+            // Update global employee data for leave management
+            window.currentEmployeeData = {
+                id: result.employee.employee_id,
+                name: result.employee.full_name || result.employee.name,
+                department: result.employee.department || 'Unknown'
+            };
+            
+            showEmployeeStatus(result.employee);
+            playNotificationSound('success');
+            
+            // Show success message
+            const confidence = result.confidence ? ` (${Math.round(result.confidence * 100)}% match)` : '';
+            showAlert(`Welcome ${result.employee.full_name || result.employee.name}!${confidence}`, 'success');
+              } else {
+            // Authentication failed
+            const errorMsg = result.message || 'Authentication failed. Please check your details.';
+            showAuthError(errorMsg);
+            playNotificationSound('error');
+        }
+        
+    } catch (error) {
+        console.error('Authentication error:', error);
+        const errorMsg = 'Network error. Please try again.';
+        showAuthError(errorMsg);
+        
+    } finally {
+        isProcessing = false;
+        $('#authStatus').addClass('d-none');
+        $('#authenticateBtn').prop('disabled', false);
+    }
+}
+
+async function performAdminBypass() {
+    // Admin bypass for testing - bypasses authentication
+    const employeeId = $('#employee-id-input').val().trim().toUpperCase();
+    if (!employeeId) {
+        showAlert('Please enter Employee ID first', 'warning');
+        return;
+    }
+    
+    // Create mock employee data for testing
+    const mockEmployee = {
+        employee_id: employeeId,
+        first_name: 'Test',
+        last_name: 'User',
+        full_name: `Test User (${employeeId})`,
+        department: 'Testing',
+        employment_status: 'active',
+        auth_method: 'admin_bypass'
+    };
+    
+    currentEmployee = mockEmployee;
+    
+    // Update global employee data for leave management
+    window.currentEmployeeData = {
+        id: mockEmployee.employee_id,
+        name: mockEmployee.full_name,
+        department: mockEmployee.department
+    };
+    
+    showEmployeeStatus(mockEmployee);
+    showAlert(`Admin bypass successful for ${employeeId}`, 'warning');
+    
+    console.log('Admin bypass activated for:', employeeId);
+}
+
+function showEmployeeStatus(employee) {
+    // Hide authentication form
+    $('#authenticationForm').addClass('d-none');
+    $('#welcomeMessage').addClass('d-none');
+    
+    // Show employee status
+    $('#employeeStatus').removeClass('d-none');
+    $('#clockActions').removeClass('d-none');
+    
+    // Populate employee information
+    $('#employeeName').text(employee.full_name || employee.name || 'Unknown Employee');
+    $('#employeeId').text(`ID: ${employee.employee_id}`);
+    $('#employeeDepartment').text(`Department: ${employee.department || 'N/A'}`);
+    
+    // Set employee photo
+    if (employee.photo_url) {
+        $('#employeePhoto').attr('src', employee.photo_url).show();
+        $('#employeePhotoPlaceholder').hide();
+    } else {
+        $('#employeePhoto').hide();
+        $('#employeePhotoPlaceholder').show();
+    }
+    
+    // Update clock button states
+    updateClockButtonStates();
+    
+    // Load leave balance and details
+    loadLeaveBalance();
+    loadLeaveDetails();
+}
+
+async function updateClockButtonStates() {
+    if (!currentEmployee) {
+        // No employee - disable all buttons
+        $('#clockInBtn').prop('disabled', true);
+        $('#clockOutBtn').prop('disabled', true);
+        $('#breakStartBtn').prop('disabled', true);
+        $('#breakEndBtn').prop('disabled', true);
+        return;
+    }
+    
+    try {
+        // Check current attendance status from server
+        const response = await fetch(`/terminal/api/status/${currentEmployee.employee_id}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            const status = data.status;
+            const hasActiveRecord = data.has_active_record;
+            
+            if (hasActiveRecord) {
+                // Employee is clocked in - enable clock out and breaks
+                $('#clockInBtn').prop('disabled', true);
+                $('#clockOutBtn').prop('disabled', false);
+                $('#breakStartBtn').prop('disabled', false);
+                $('#breakEndBtn').prop('disabled', true);
+                
+                // Update status display
+                $('#statusText').text('Clocked In');
+                $('#statusBadge').removeClass('status-out status-break').addClass('status-in');
+            } else {
+                // Employee is clocked out - enable clock in only
+                $('#clockInBtn').prop('disabled', false);
+                $('#clockOutBtn').prop('disabled', true);
+                $('#breakStartBtn').prop('disabled', true);
+                $('#breakEndBtn').prop('disabled', true);
+                
+                // Update status display
+                $('#statusText').text('Ready to Clock In');
+                $('#statusBadge').removeClass('status-in status-break').addClass('status-out');
+            }
+        } else {
+            // Error checking status - default to clock in enabled
+            $('#clockInBtn').prop('disabled', false);
+            $('#clockOutBtn').prop('disabled', true);
+            $('#breakStartBtn').prop('disabled', true);
+            $('#breakEndBtn').prop('disabled', true);
+        }
+    } catch (error) {
+        console.error('Error checking employee status:', error);
+        // Default to clock in enabled on error
+        $('#clockInBtn').prop('disabled', false);
+        $('#clockOutBtn').prop('disabled', true);
+        $('#breakStartBtn').prop('disabled', true);
+        $('#breakEndBtn').prop('disabled', true);
+    }
+}
+
+async function performClockAction(action) {
+    if (!currentEmployee || isProcessing) return;
+    
+    isProcessing = true;
+    
+    try {
+        const actionBtn = $(`#${action.replace('_', '')}Btn`);
+        const originalText = actionBtn.html();
+        actionBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Processing...');
+        
+        const response = await fetch(`/terminal/api/${action}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                employee_id: currentEmployee.employee_id,
+                terminal_id: terminalId,
+                auth_method: currentEmployee.auth_method
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            const actionName = action.replace('_', ' ').toUpperCase();
+            showAlert(`${actionName} successful!`, 'success');
+            playNotificationSound('success');
+            
+            // Update button states
+            updateClockButtonStates();
+            
+            // Auto-logout after successful action
+            setTimeout(() => {
+                resetToStep1();
+            }, 3000);
+            
+        } else {
+            showAlert(result.message || `${action} failed`, 'error');
+            playNotificationSound('error');
+        }
+        
+        actionBtn.prop('disabled', false).html(originalText);
+        
+    } catch (error) {
+        console.error(`${action} error:`, error);
+        showAlert(`Failed to ${action.replace('_', ' ')}. Please try again.`, 'error');
+        
+    } finally {
+        isProcessing = false;
+    }
+}
+
+function resetToStep1() {
+    console.log('🔄 Resetting to step 1...');
+    
+    // Reset all authentication data
+    currentStep = 1;
+    employeeData = {};
+    currentEmployee = null;
+    isProcessing = false;
+    
+    // Show authentication form
+    $('#authenticationForm').removeClass('d-none');
+    $('#welcomeMessage').removeClass('d-none');
+    
+    // Hide employee status and clock actions
+    $('#employeeStatus').addClass('d-none');
+    $('#clockActions').addClass('d-none');
+    $('#authStatus').addClass('d-none');
+    $('#authError').addClass('d-none');
+    
+    // Reset form
+    $('#employee-id-input').val('').focus();
+    $('#pinCode').val('');
+    
+    // Stop camera if active (but preserve for face tracking)
+    const video = document.getElementById('cameraVideo');
+    const faceTrackingActive = window.faceTracker && window.faceTracker.isTracking;
+    
+    if (video.srcObject && !faceTrackingActive) {
+        // Only stop camera if face tracking is not active
+        video.srcObject.getTracks().forEach(track => track.stop());
+        video.srcObject = null;
+        $(video).addClass('d-none');
+        $('.camera-placeholder').removeClass('d-none');
+        $('#startCamera').removeClass('d-none');
+        $('#capturePhoto').addClass('d-none');
+    }
+    
+    // Show step 1
+    showStep(1);
+    
+    // PRESERVE FACE TRACKING TEST BUTTONS - Always keep them visible
+    setTimeout(() => {
+        console.log('🔧 Preserving face tracking test buttons...');
+        $('.alert-warning').removeClass('d-none').show();
+        
+        if (faceTrackingActive) {
+            $('#stopFaceTrackingBtn').removeClass('d-none').show();
+            console.log('✅ Face tracking still active, stop button preserved');
+        } else {
+            $('#testFaceTrackingBtn').removeClass('d-none').show();
+            console.log('✅ Face tracking test button preserved');
+        }
+    }, 100);
+    
+    console.log('✅ Reset to step 1 complete (face tracking preserved)');
+}
+
+function updateTimeDisplay() {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-US', { 
+        hour12: false, 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit' 
+    });
+    const dateStr = now.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+    
+    $('#terminalTime').text(timeStr);
+    $('#terminalDate').text(dateStr);
+}
+
+function showAuthError(message) {
+    // Hide other status elements
+    $('#authStatus').addClass('d-none');
+    
+    // Show authentication error with troubleshoot option
+    $('#authErrorMessage').text(message);
+    $('#authError').removeClass('d-none');
+    
+    // Don't reset to step 1 immediately - let user troubleshoot
+    console.log('Authentication error:', message);
+}
+
+function showAlert(typeOrMessage, messageOrType = 'info', duration = 5000) {
+    let type, message;
+    
+    // Handle both parameter patterns: showAlert(message, type) and showAlert(type, message, duration)
+    if (typeof typeOrMessage === 'string' && ['success', 'error', 'warning', 'info', 'danger'].includes(messageOrType)) {
+        // Pattern: showAlert(message, type)
+        message = typeOrMessage;
+        type = messageOrType;
+    } else if (typeof typeOrMessage === 'string' && ['success', 'error', 'warning', 'info', 'danger'].includes(typeOrMessage)) {
+        // Pattern: showAlert(type, message, duration)
+        type = typeOrMessage;
+        message = messageOrType;
+        if (typeof arguments[2] === 'number') {
+            duration = arguments[2];
+        }
+    } else {
+        // Default pattern: first parameter is message, second is type
+        message = typeOrMessage;
+        type = messageOrType || 'info';
+    }
+    
+    // Create and show bootstrap alert
+    const alertClass = type === 'error' ? 'danger' : type;
+    const alertHtml = `
+        <div class="alert alert-${alertClass} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x" 
+             style="z-index: 9999; margin-top: 20px; max-width: 500px;">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    $('body').append(alertHtml);
+    
+    // Auto-remove after specified duration
+    setTimeout(() => {
+        $('.alert:last').alert('close');
+    }, duration);
+}
+
+function playNotificationSound(type) {
+    try {
+        const audio = document.getElementById(type + 'Sound');
+        if (audio) {
+            audio.play().catch(e => console.log('Audio play failed:', e));
+        }
+    } catch (error) {
+        console.log('Sound playback error:', error);
+    }
+}
+
+function startInactivityTimer() {
+    resetInactivityTimer();
+}
+
+function resetInactivityTimer() {
+    clearTimeout(inactivityTimer);
+    clearTimeout(logoutTimer);
+    $('#inactivityWarning').hide();
+    
+    // Set 5 minutes inactivity timeout
+    inactivityTimer = setTimeout(() => {
+        if (currentEmployee) {
+            showInactivityWarning();
+        }
+    }, 5 * 60 * 1000); // 5 minutes
+}
+
+function showInactivityWarning() {
+    let countdown = 30;
+    $('#logoutCountdown').text(countdown);
+    $('#inactivityWarning').show();
+    
+    const countdownInterval = setInterval(() => {
+        countdown--;
+        $('#logoutCountdown').text(countdown);
+        
+        if (countdown <= 0) {
+            clearInterval(countdownInterval);
+            $('#inactivityWarning').hide();
+            resetToStep1();
+        }
+    }, 1000);
+    
+    logoutTimer = setTimeout(() => {
+        clearInterval(countdownInterval);
+        $('#inactivityWarning').hide();
+        resetToStep1();
+    }, 30000);
+}
+
+function cancelAutoLogout() {
+    clearTimeout(logoutTimer);
+    $('#inactivityWarning').hide();
+    resetInactivityTimer();
+}
+
+// Face Tracking Test Functions
+window.testFaceTracking = function() {
+    console.log('🧪 Starting face tracking test...');
+    
+    // FORCE BUTTON VISIBILITY - Independent of authentication state
+    $('#testFaceTrackingBtn').removeClass('d-none').show();
+    $('#stopFaceTrackingBtn').addClass('d-none').hide();
+    
+    // Make sure the test section is always visible
+    $('.alert-warning').removeClass('d-none').show();
+    
+    // Update UI to show tracking is starting
+    updateTrackingStatus('loading', 'Initializing face tracking...');
+    
+    // Check if camera is active
+    const video = document.getElementById('cameraVideo');
+    if (!video || video.videoWidth === 0) {
+        showAlert('warning', 'Please start the camera first before testing face tracking. The face tracking test will wait for camera access.', 8000);
+        updateTrackingStatus('inactive', 'Face tracking ready - waiting for camera');
+        
+        // Set up a camera watcher to auto-start when camera becomes available
+        const cameraWatcher = setInterval(() => {
+            const currentVideo = document.getElementById('cameraVideo');
+            if (currentVideo && currentVideo.videoWidth > 0) {
+                clearInterval(cameraWatcher);
+                console.log('📹 Camera detected, auto-starting face tracking test...');
+                showAlert('success', 'Camera detected! Starting face tracking test automatically.');
+                startFaceTrackingTest(currentVideo);
+            }
+        }, 1000);
+        
+        // Clear watcher after 30 seconds to avoid infinite polling
+        setTimeout(() => clearInterval(cameraWatcher), 30000);
+        return;
+    }
+    
+    // Check if face tracker is available
+    if (!window.faceTracker) {
+        console.log('⚠️ Face tracker not available, attempting to initialize...');
+        showAlert('info', 'Loading face tracking system...');
+        
+        // Try to load face tracking after a delay
+        setTimeout(() => {
+            if (window.faceTracker) {
+                startFaceTrackingTest(video);
+            } else {
+                showAlert('error', 'Face tracking system is not available. Please check if face-tracking.js is loaded.');
+                updateTrackingStatus('error', 'Face tracking system unavailable');
+            }
+        }, 2000);
+        return;
+    }
+    
+    startFaceTrackingTest(video);
+};
+
+function startFaceTrackingTest(video) {
+    console.log('🎯 Starting face tracking test with video:', video);
+    
+    try {
+        // Force re-initialize and start tracking
+        window.faceTracker.initialize().then(() => {
+            console.log('✅ Face tracker initialized for test');
+            const result = window.faceTracker.startTracking(video);
+            console.log('🔍 Face tracking started, result:', result);
+            
+            updateTrackingStatus('active', 'Face tracking active - look for visual markers!');
+              // ENHANCED BUTTON MANAGEMENT - Make stop button very prominent
+            $('#testFaceTrackingBtn').addClass('d-none').hide();
+            $('#stopFaceTrackingBtn').removeClass('d-none')
+                .addClass('btn-danger btn-lg tracking-active')
+                .css({
+                    'animation': 'pulse-danger 1.5s infinite',
+                    'font-weight': 'bold',
+                    'border': '3px solid #dc3545'
+                })
+                .show();
+            
+            // Show face tracking info
+            $('#faceTrackingInfo').slideDown();
+            
+            // Start tracking timer with enhanced persistence
+            startTrackingTimer();
+            
+            // Enhanced user feedback
+            showAlert('success', '🎯 FACE TRACKING TEST ACTIVE! 🎯<br><br>' +
+                     '✅ Look for GREEN/YELLOW/ORANGE boxes around faces<br>' +
+                     '✅ Eye, nose, mouth dots should appear<br>' +
+                     '✅ Quality feedback panel should show<br><br>' +
+                     '<strong>🛑 Click the RED "Stop Tracking" button when done testing 🛑</strong>', 
+                     15000); // Show for 15 seconds
+            
+            // Add persistent reminder every 10 seconds
+            const reminderInterval = setInterval(() => {
+                if (window.faceTracker && window.faceTracker.isTracking) {
+                    console.log('🔄 Face tracking test still active - duration check');
+                    // Make sure stop button is still visible and prominent
+                    $('#stopFaceTrackingBtn').removeClass('d-none').show()
+                        .css('animation', 'pulse-danger 1.5s infinite');
+                } else {
+                    clearInterval(reminderInterval);
+                }
+            }, 10000);
+            
+        }).catch(error => {
+            console.error('❌ Face tracker initialization failed:', error);
+            showAlert('error', 'Failed to initialize face tracking: ' + error.message);
+            updateTrackingStatus('error', 'Face tracking initialization failed');
+            
+            // Reset buttons on error
+            $('#testFaceTrackingBtn').removeClass('d-none').show();
+            $('#stopFaceTrackingBtn').addClass('d-none').hide();
+        });
+        
+    } catch (error) {
+        console.error('❌ Face tracking test error:', error);
+        showAlert('error', 'Face tracking test failed: ' + error.message);
+        updateTrackingStatus('error', 'Face tracking test failed');
+        
+        // Reset buttons on error
+        $('#testFaceTrackingBtn').removeClass('d-none').show();
+        $('#stopFaceTrackingBtn').addClass('d-none').hide();
+    }
+}
+
+let trackingTimer = null;
+let trackingStartTime = null;
+
+function startTrackingTimer() {
+    trackingStartTime = Date.now();
+    
+    trackingTimer = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - trackingStartTime) / 1000);
+        const minutes = Math.floor(elapsed / 60);
+        const seconds = elapsed % 60;
+        const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        // Update tracking status with timer
+        updateTrackingStatus('active', `Face tracking active (${timeStr}) - Look for visual markers!`);
+        
+        // Check if tracking is still active
+        if (window.faceTracker && !window.faceTracker.isTracking) {
+            console.warn('⚠️ Face tracking stopped unexpectedly, attempting restart...');
+            clearInterval(trackingTimer);
+            
+            // Try to restart tracking
+            const video = document.getElementById('cameraVideo');
+            if (video && video.videoWidth > 0) {
+                setTimeout(() => {
+                    window.faceTracker.startTracking(video);
+                    startTrackingTimer(); // Restart timer
+                    showAlert('info', 'Face tracking restarted automatically.');
+                }, 1000);
+            } else {
+                // Video not available, stop tracking test
+                window.stopFaceTrackingTest();
+                showAlert('warning', 'Face tracking stopped - camera unavailable.');
+            }
+        }
+    }, 1000);
+}
+
+function stopTrackingTimer() {
+    if (trackingTimer) {
+        clearInterval(trackingTimer);
+        trackingTimer = null;
+        trackingStartTime = null;
+    }
+}
+
+window.stopFaceTrackingTest = function() {
+    console.log('⏹️ Stopping face tracking test...');
+    
+    // FORCE BUTTON VISIBILITY - Make sure buttons remain accessible
+    $('#testFaceTrackingBtn').removeClass('d-none').show();
+    $('#stopFaceTrackingBtn').addClass('d-none').hide();
+    
+    // Ensure the test section stays visible
+    $('.alert-warning').removeClass('d-none').show();
+    
+    try {
+        if (window.faceTracker) {
+            window.faceTracker.stopTracking();
+            console.log('✅ Face tracking stopped');
+        }
+        
+        // Stop tracking timer
+        stopTrackingTimer();
+        
+        // Update UI
+        updateTrackingStatus('inactive', 'Face tracking stopped - ready for new test');
+        
+        // Hide face tracking info
+        $('#faceTrackingInfo').slideUp();
+        
+        // Calculate tracking duration
+        let durationMsg = '';
+        if (trackingStartTime) {
+            const duration = Math.floor((Date.now() - trackingStartTime) / 1000);
+            const minutes = Math.floor(duration / 60);
+            const seconds = duration % 60;
+            durationMsg = ` Tracked for ${minutes}:${seconds.toString().padStart(2, '0')}.`;
+        }
+        
+        showAlert('info', `Face tracking test stopped.${durationMsg} Click "Test Face Tracking" to start again.`, 5000);
+        
+    } catch (error) {
+        console.error('❌ Error stopping face tracking:', error);
+        showAlert('error', 'Error stopping face tracking: ' + error.message);
+    }
+};
+
+function updateTrackingStatus(state, message) {
+    console.log('📊 Updating tracking status:', state, message);
+    
+    const statusDiv = $('#faceTrackingStatus');
+    const statusText = $('#trackingStatusText');
+    const spinner = $('#trackingSpinner');
+    const activeIcon = $('#trackingActiveIcon');
+    
+    // Update text
+    statusText.text(message);
+    
+    // Update icons based on state
+    switch (state) {
+        case 'loading':
+            statusDiv.removeClass('d-none').removeClass('alert-success alert-danger').addClass('alert-secondary');
+            spinner.show();
+            activeIcon.hide();
+            break;
+        case 'active':
+            statusDiv.removeClass('d-none').removeClass('alert-secondary alert-danger').addClass('alert-success');
+            spinner.hide();
+            activeIcon.show();
+            break;
+        case 'error':
+            statusDiv.removeClass('d-none').removeClass('alert-secondary alert-success').addClass('alert-danger');
+            spinner.hide();
+            activeIcon.hide();
+            break;
+        case 'inactive':
+        default:
+            statusDiv.addClass('d-none');
+            spinner.hide();
+            activeIcon.hide();
+            break;
+    }
+}
+
+// Initialize face tracking test buttons
+$(document).ready(function() {
+    console.log('🔧 Setting up face tracking test buttons...');
+    
+    // Debug: Check if buttons exist in DOM
+    const testBtn = $('#testFaceTrackingBtn');
+    const stopBtn = $('#stopFaceTrackingBtn');
+    console.log('🔍 Button check:');
+    console.log('- Test button exists:', testBtn.length);
+    console.log('- Stop button exists:', stopBtn.length);
+    console.log('- Test button visible:', testBtn.is(':visible'));
+    console.log('- Stop button visible:', stopBtn.is(':visible'));
+    
+    // Enhanced debugging
+    if (testBtn.length === 0) {
+        console.error('❌ Test Face Tracking button not found in DOM!');
+        showAlert('error', 'Face tracking test button not found! Please refresh the page.', 10000);
+    } else {
+        console.log('✅ Face tracking test button found');
+        
+        // Make sure button is always visible
+        testBtn.removeClass('d-none').show();
+        console.log('✅ Test button forced visible');
+    }
+    
+    // Add event listeners for face tracking test buttons
+    $('#testFaceTrackingBtn').on('click', function() {
+        console.log('🧪 Test Face Tracking button clicked');
+        window.testFaceTracking();
+    });
+    
+    $('#stopFaceTrackingBtn').on('click', function() {
+        console.log('⏹️ Stop Face Tracking button clicked');
+        window.stopFaceTrackingTest();
+    });
+    
+    console.log('✅ Face tracking test button listeners set up');
+    
+    // ENHANCED FACE TRACKING BUTTON PERSISTENCE
+    // Ensure face tracking buttons are always visible and clickable
+    const buttonPersistenceCheck = setInterval(() => {
+        // Force visibility of face tracking test section
+        $('.alert-warning').removeClass('d-none').show();
+        
+        // Force visibility of appropriate buttons based on tracking state
+        const isTracking = window.faceTracker && window.faceTracker.isTracking;
+        if (isTracking) {
+            // When tracking is active, show stop button prominently
+            $('#testFaceTrackingBtn').addClass('d-none').hide();
+            $('#stopFaceTrackingBtn').removeClass('d-none')
+                .addClass('btn-danger btn-lg tracking-active')
+                .css({
+                    'animation': 'pulse-danger 1.5s infinite',
+                    'font-weight': 'bold',
+                    'border': '3px solid #dc3545'
+                })
+                .show();
+        } else {
+            // When not tracking, show test button
+            $('#testFaceTrackingBtn').removeClass('d-none').show();
+            $('#stopFaceTrackingBtn').addClass('d-none').hide();
+        }
+    }, 2000); // Check every 2 seconds
+    
+    // Debug: Log button persistence check
+    console.log('✅ Button persistence check interval started');
+    
+    // Add a pulse animation to make the test button more visible
+    setTimeout(() => {
+        const testBtn = $('#testFaceTrackingBtn');
+        if (testBtn.length > 0) {
+            console.log('✨ Adding pulse animation to face tracking test button');
+            
+            // Pulse animation
+            let pulseCount = 0;
+            const pulseInterval = setInterval(() => {
+                testBtn.toggleClass('btn-warning btn-outline-warning');
+                pulseCount++;
+                
+                if (pulseCount >= 4) { // Pulse 2 times
+                    clearInterval(pulseInterval);
+                    testBtn.removeClass('btn-outline-warning').addClass('btn-warning');
+                }
+            }, 600);
+            
+            // Add floating notification
+            showAlert('🎯 FACE TRACKING TEST NOW ENHANCED! 🎯<br><br>' + 
+                     '✅ Test buttons are now ALWAYS visible<br>' +
+                     '✅ Camera watcher will auto-start when camera is available<br>' +
+                     '✅ Tracking will persist until manually stopped<br>' +
+                     '✅ No more "too short" tracking sessions!<br><br>' +
+                     '<strong>Start camera first, then click "Test Face Tracking"</strong>', 'info', 12000);
+        }
+    }, 3000);
+});
+
+// Global employee data
+window.currentEmployeeData = {
+    id: 'EMP01',
+    name: 'John Doe',
+    department: 'Engineering'
+};
+
+// Leave management functions
+function openLeaveManagement() {
+    if (!window.currentEmployeeData) {
+        showAlert('Employee data is not available. Please try again later.', 'warning');
+        return;
+    }
+    
+    // Open leave management in a new tab/window
+    window.open(`/api/leave/employee-leave?employee_id=${window.currentEmployeeData.id}`, '_blank');
+    
+    // Show confirmation toast
+    showAlert(`Leave Management opened for ${window.currentEmployeeData.name}`, 'success');
+}
+
+// Messaging functions
+function openMessages() {
+    if (!window.currentEmployeeData) {
+        showAlert('Employee data is not available. Please try again later.', 'warning');
+        return;
+    }
+    
+    // Open messaging interface in a new tab/window
+    window.open(`/api/messaging/interface?employee_id=${window.currentEmployeeData.id}`, '_blank');
+    
+    // Show confirmation toast
+    showAlert(`Messages opened for ${window.currentEmployeeData.name}`, 'success');
+}
+
+function loadLeaveBalance() {
+    if (!window.currentEmployeeData) {
+        console.error('Employee data is not available.');
+        return;
+    }
+
+    const employeeId = window.currentEmployeeData.id;
+    console.log('📊 Loading leave balance for employee:', employeeId);
+    
+    fetch(`/api/leave/balance/${employeeId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Leave balance loaded:', data);
+            // Update UI with balance data if needed
+        })
+        .catch(error => {
+            console.error('Failed to load leave balance:', error);
+        });
+}
+
+function loadLeaveDetails() {
+    if (!window.currentEmployeeData) {
+        console.error('Employee data is not available.');
+        showAlert('Employee data is not available.', 'warning');
+        return;
+    }
+
+    const employeeId = window.currentEmployeeData.id;
+    console.log('🍃 Loading leave details for employee:', employeeId);
+    
+    fetch(`/api/leave/applications?employee_id=${employeeId}&limit=5`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Leave applications loaded:', data);
+            // Process leave details here
+            if (data && data.length > 0) {
+                showAlert(`Found ${data.length} leave applications`, 'info');
+            } else {
+                showAlert('No leave applications found', 'info');
+            }
+        })
+        .catch(error => {
+            console.error('Failed to load leave applications:', error);
+            showAlert('Failed to load leave applications', 'error');
+        });
+}
+
+// Export functions for global access
+window.SimplifiedTerminal = {
+    resetToStep1,
+    showAlert,
+    playNotificationSound
+};
+</script>
+{% endblock %}

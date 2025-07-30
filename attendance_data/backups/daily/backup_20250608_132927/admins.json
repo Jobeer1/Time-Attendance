@@ -1,0 +1,40 @@
+[
+  {
+    "id": "c69041d2-636a-4bfc-864a-d709b3332975",
+    "created_at": "2025-06-05T15:06:08.247251",
+    "updated_at": "2025-06-06T15:32:34.766052",
+    "username": "admin",
+    "password_hash": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+    "email": "admin@company.com",
+    "full_name": "System Administrator",
+    "is_super_admin": true,
+    "permissions": [
+      "all"
+    ],
+    "is_active": true,
+    "last_login": "2025-06-06T15:32:34.765775",
+    "login_attempts": 0,
+    "locked_until": "",
+    "notification_preferences": {},
+    "dashboard_config": {}
+  },
+  {
+    "id": "80e4f16e-2321-49c9-88dd-c0d62081cea0",
+    "created_at": "2025-06-05T16:14:43.144817",
+    "updated_at": "2025-06-05T16:14:43.144834",
+    "username": "admin",
+    "password_hash": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+    "email": "admin@company.com",
+    "full_name": "System Administrator",
+    "is_super_admin": true,
+    "permissions": [
+      "all"
+    ],
+    "is_active": true,
+    "last_login": "",
+    "login_attempts": 0,
+    "locked_until": "",
+    "notification_preferences": {},
+    "dashboard_config": {}
+  }
+]

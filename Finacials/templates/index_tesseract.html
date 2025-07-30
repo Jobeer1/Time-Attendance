@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tesseract OCR PDF to CSV</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        .container { max-width: 600px; margin: auto; }
+        label { display: block; margin-top: 1em; }
+        input[type="number"] { width: 80px; }
+        .result { margin-top: 2em; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>PDF to CSV Extraction (Tesseract OCR)</h2>
+    <form id="ocrForm" enctype="multipart/form-data">
+        <label for="pdf">PDF File:</label>
+        <input type="file" id="pdf" name="pdf" accept="application/pdf" required>
+        <div style="margin-top:1em;">
+            <label for="start_page">Start Page:</label>
+            <input type="number" id="start_page" name="start_page" min="1" value="1">
+            <label for="end_page" style="margin-left:1em;">End Page (0 = last):</label>
+            <input type="number" id="end_page" name="end_page" min="0" value="0">
+        </div>
+        <button type="submit" style="margin-top:1.5em; width:100%; padding:0.7em; font-size:1.1em;">Extract to CSV</button>
+    </form>
+    <div class="result" id="result"></div>
+    <div id="help" style="margin-top:2em; color:#555; font-size:0.95em;">
+        <b>Instructions:</b><br>
+        1. Select your PDF file.<br>
+        2. Choose the page range to extract (leave End Page as 0 for all pages).<br>
+        3. Click <b>Extract to CSV</b> and wait for processing.<br>
+        4. Download and review the CSV.<br>
+        <br>
+        <b>Note:</b> If you get an error about Poppler, see the README or ask for help.<br>
+    </div>
+</div>
+<script>
+    const form = document.getElementById('ocrForm');
+    const resultDiv = document.getElementById('result');
+    form.onsubmit = async function(e) {
+        e.preventDefault();
+        resultDiv.innerHTML = '<span style="color:#007bff;">Processing... Please wait.</span>';
+        const data = new FormData(form);
+        try {
+            const resp = await fetch('/extract', { method: 'POST', body: data });
+            if (resp.ok) {
+                const blob = await resp.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'output.csv';
+                a.textContent = '⬇️ Download CSV';
+                a.style.display = 'inline-block';
+                a.style.marginTop = '1em';
+                a.style.fontWeight = 'bold';
+                resultDiv.innerHTML = '';
+                resultDiv.appendChild(a);
+            } else {
+                let errMsg = 'Error occurred.';
+                try {
+                    const err = await resp.json();
+                    errMsg = err.error || errMsg;
+                } catch {}
+                resultDiv.innerHTML = `<span style="color:red;">${errMsg}</span>`;
+            }
+        } catch (ex) {
+            resultDiv.innerHTML = `<span style="color:red;">Network or server error.</span>`;
+        }
+    };
+</script>
+</body>
+</html>

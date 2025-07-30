@@ -1,0 +1,15 @@
+[
+  {
+    "id": "admin_001",
+    "username": "admin",
+    "password": "pbkdf2:sha256:260000$J4Q9zX7Y$8f5b5a5c5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a",
+    "email": "admin@attendance.com",
+    "full_name": "System Administrator",
+    "role": "super_admin",
+    "is_active": true,
+    "last_login": null,
+    "login_attempts": 0,
+    "created_at": "2024-01-01T08:00:00",
+    "updated_at": "2024-01-01T08:00:00"
+  }
+]

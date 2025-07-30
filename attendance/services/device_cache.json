@@ -1,0 +1,740 @@
+{
+  "networks": {
+    "10.0.0.0/24": {
+      "name": "Network 10.0.0.0/24",
+      "description": "Auto-created network for 10.0.0.141",
+      "devices": {
+        "10.0.0.141": {
+          "hostname": "10.0.0.141",
+          "mac_address": "04-ed-33-33-6f-49",
+          "custom_name": null,
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-20T10:28:40.605375"
+        },
+        "10.0.0.254": {
+          "hostname": "dsldevice.lan",
+          "mac_address": "b4-26-5d-81-82-60",
+          "custom_name": null,
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-19T23:51:13.533977"
+        },
+        "10.0.0.109": {
+          "hostname": "10.0.0.109",
+          "mac_address": "7E-41-9F-0C-F1-30",
+          "custom_name": "Johann se foon",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-20T10:22:34.599808"
+        },
+        "10.0.0.113": {
+          "hostname": "10.0.0.113",
+          "mac_address": "BA-C3-47-A8-F6-FA",
+          "custom_name": null,
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-20T10:25:15.114228"
+        },
+        "10.0.0.140": {
+          "hostname": "10.0.0.140",
+          "mac_address": "FE-20-3B-C1-BC-04",
+          "custom_name": null,
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-20T10:27:03.158547"
+        },
+        "10.0.0.150": {
+          "hostname": "10.0.0.150",
+          "mac_address": "AE-C0-B7-CA-C3-0A",
+          "custom_name": null,
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-20T10:28:21.541583"
+        },
+        "10.0.0.131": {
+          "hostname": "Device-10-0-0-131",
+          "mac_address": "CE-03-6E-4A-35-95",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-20T15:08:17.711484"
+        },
+        "10.0.0.128": {
+          "hostname": "Device-10-0-0-128",
+          "mac_address": "56-22-A2-CB-3C-01",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-20T18:42:40.483198"
+        },
+        "10.0.0.151": {
+          "hostname": "Device-10-0-0-151",
+          "mac_address": "3C-38-24-02-CD-28",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-20T18:42:51.390826"
+        },
+        "10.0.0.115": {
+          "ip_address": "10.0.0.115",
+          "hostname": "host.docker.internal",
+          "mac_address": ":::",
+          "custom_name": "Johann se laptop",
+          "device_type": "unknown",
+          "manufacturer": "Unknown",
+          "last_seen": "2025-07-20T22:42:49.269762",
+          "updated_by": "admin"
+        },
+        "10.0.0.110": {
+          "hostname": "Device-10-0-0-110",
+          "mac_address": "84:C0:EF:69:AC:EB",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-30T20:27:02.750445"
+        }
+      }
+    },
+    "155.235.81.0/24": {
+      "name": "Network 155.235.81.0/24",
+      "description": "Auto-created network for 155.235.81.1",
+      "devices": {
+        "155.235.81.1": {
+          "ip_address": "155.235.81.1",
+          "hostname": "155.235.81.1",
+          "mac_address": "74:46:a0:19:a1:c0",
+          "custom_name": "Switch 1",
+          "device_type": "unknown",
+          "manufacturer": "Unknown",
+          "last_seen": "2025-07-22T10:09:31.143301",
+          "updated_by": "admin"
+        },
+        "155.235.81.2": {
+          "ip_address": "155.235.81.2",
+          "hostname": "155.235.81.2",
+          "mac_address": "08:2e:5f:ec:30:c0",
+          "custom_name": "Switch 2",
+          "device_type": "unknown",
+          "manufacturer": "Unknown",
+          "last_seen": "2025-07-22T11:03:34.565085",
+          "updated_by": "admin"
+        },
+        "155.235.81.15": {
+          "ip_address": "155.235.81.15",
+          "hostname": "155.235.81.15",
+          "mac_address": "28:c6:8e:34:ab:af",
+          "custom_name": "DocAdminNAS",
+          "device_type": "unknown",
+          "manufacturer": "Unknown",
+          "last_seen": "2025-07-23T13:36:08.112058",
+          "updated_by": "admin"
+        },
+        "155.235.81.12": {
+          "hostname": "sto-emp-voice01.stoyanov.local",
+          "mac_address": "00-0C-29-E2-14-5E",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T15:08:40.776135",
+          "custom_name": "VM voice Dictations",
+          "updated_at": "2025-07-23T15:08:40.776115",
+          "updated_by": "admin"
+        },
+        "155.235.81.6": {
+          "hostname": "sto-emp-vcsa",
+          "mac_address": "00-0C-29-7D-59-F1",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T14:57:46.843944",
+          "custom_name": "VM Main Production server",
+          "updated_at": "2025-07-23T14:57:46.843919",
+          "updated_by": "admin"
+        },
+        "155.235.81.10": {
+          "hostname": "sto-emp-risdb.stoyanov.local",
+          "mac_address": "00-50-56-A7-36-C2",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T15:02:05.729331",
+          "custom_name": "VM RIS Databse",
+          "updated_at": "2025-07-23T15:02:05.729311",
+          "updated_by": "admin"
+        },
+        "155.235.81.7": {
+          "hostname": "STO-EMP-VEEAM",
+          "mac_address": "00:50:56:A7:D8:49",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T14:58:17.899796",
+          "custom_name": "VM Veeam server",
+          "updated_at": "2025-07-23T14:58:17.899773",
+          "updated_by": "admin"
+        },
+        "155.235.81.11": {
+          "hostname": "sto-emp-risapp.stoyanov.local",
+          "mac_address": "00:0C:29:22:9F:2D",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T15:02:54.923594",
+          "custom_name": "VM VIKING",
+          "updated_at": "2025-07-23T15:02:54.923574",
+          "updated_by": "admin"
+        },
+        "155.235.81.13": {
+          "hostname": "Device-155-235-81-13",
+          "mac_address": "00:04:A3:B7:34:14",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T15:07:57.515079",
+          "custom_name": "BRETT router in house",
+          "updated_at": "2025-07-23T15:07:57.515058",
+          "updated_by": "admin"
+        },
+        "155.235.81.22": {
+          "hostname": "STO-EMP-PANDORA",
+          "mac_address": "00:50:56:A7:84:B7",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T15:05:30.705878",
+          "custom_name": "PANDORA 2vm",
+          "updated_at": "2025-07-23T15:05:30.705856",
+          "updated_by": "admin"
+        },
+        "155.235.81.18": {
+          "hostname": "Device-155-235-81-18",
+          "mac_address": "D0:94:66:55:5A:60",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T15:06:35.209561",
+          "custom_name": "IDRAG on MAIN Server",
+          "updated_at": "2025-07-23T15:06:35.209541",
+          "updated_by": "admin"
+        },
+        "155.235.81.20": {
+          "hostname": "STO-EMP-PANDORA",
+          "mac_address": "00-50-56-A7-B2-B4",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T15:05:10.959402",
+          "custom_name": "PANDORA 1 vm",
+          "updated_at": "2025-07-23T15:05:10.959378",
+          "updated_by": "admin"
+        },
+        "155.235.81.30": {
+          "ip_address": "155.235.81.30",
+          "hostname": "Device-155-235-81-30",
+          "mac_address": "b8:ca:3a:fa:0b:f4",
+          "custom_name": "DELL Veeam Server",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:51:05.410603",
+          "updated_by": "admin"
+        },
+        "155.235.81.31": {
+          "ip_address": "155.235.81.31",
+          "hostname": "Device-155-235-81-31",
+          "mac_address": "80:18:44:f2:3b:2c",
+          "custom_name": "DELL Production server",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T14:00:35.489441",
+          "updated_by": "admin"
+        },
+        "155.235.81.35": {
+          "hostname": "STO-EMP-RAG03",
+          "mac_address": "B8:CA:3A:76:17:96",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T15:10:52.312312",
+          "custom_name": "Lulu PC",
+          "updated_at": "2025-07-23T15:10:52.312290",
+          "updated_by": "admin"
+        },
+        "155.235.81.41": {
+          "hostname": "EPSON468776",
+          "mac_address": "64:C6:D2:46:87:76",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T15:12:12.620053",
+          "custom_name": "Printer Epson",
+          "updated_at": "2025-07-23T15:12:12.620032",
+          "updated_by": "admin"
+        },
+        "155.235.81.49": {
+          "hostname": "NAS-VMBCKUP",
+          "mac_address": "00:00:00:00:05:09",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:39:24.923573"
+        },
+        "155.235.81.45": {
+          "hostname": "Device-155-235-81-45",
+          "mac_address": "F0-9F-C2-B0-45-60",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:39:29.886205"
+        },
+        "155.235.81.44": {
+          "hostname": "Device-155-235-81-44",
+          "mac_address": "24-A4-3C-8E-87-A7",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:39:34.891546"
+        },
+        "155.235.81.46": {
+          "hostname": "Device-155-235-81-46",
+          "mac_address": "F0:9F:C2:B4:F2:5D",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:39:39.810575"
+        },
+        "155.235.81.51": {
+          "hostname": "Device-155-235-81-51",
+          "mac_address": "70:2E:D9:3C:60:6E",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:39:44.735004"
+        },
+        "155.235.81.53": {
+          "hostname": "STO-EMP-RAD04",
+          "mac_address": "8C:EC:4B:84:61:B6",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:39:45.174603"
+        },
+        "155.235.81.47": {
+          "hostname": "Device-155-235-81-47",
+          "mac_address": "80-5E-C0-21-EE-E3",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:39:50.144164"
+        },
+        "155.235.81.52": {
+          "hostname": "Device-155-235-81-52",
+          "mac_address": "16-8F-5F-EE-3D-20",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:39:55.112703"
+        },
+        "155.235.81.57": {
+          "hostname": "Device-155-235-81-57",
+          "mac_address": "8A:B0:3B:76:A5:0F",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:40:00.131141"
+        },
+        "155.235.81.60": {
+          "hostname": "BRNB42200B83855",
+          "mac_address": "B4:22:00:B8:38:55",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:40:00.578287"
+        },
+        "155.235.81.61": {
+          "hostname": "chiefradiographer",
+          "mac_address": "D8:9E:F3:03:01:36",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:40:00.992404"
+        },
+        "155.235.81.54": {
+          "hostname": "Device-155-235-81-54",
+          "mac_address": "A2:7F:C7:23:9A:F5",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:40:09.044210"
+        },
+        "155.235.81.65": {
+          "hostname": "Device-155-235-81-65",
+          "mac_address": "74-F8-DB-50-73-43",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:40:14.051962"
+        },
+        "155.235.81.69": {
+          "hostname": "WORKSTATIONXXX",
+          "mac_address": "F4:8E:38:82:47:6B",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:40:14.502111"
+        },
+        "155.235.81.71": {
+          "hostname": "EPSON5766A1",
+          "mac_address": "38:1A:52:57:66:A1",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:40:19.454873"
+        },
+        "155.235.81.80": {
+          "hostname": "Device-155-235-81-80",
+          "mac_address": "80-3F-5D-F6-9E-25",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:40:24.565394"
+        },
+        "155.235.81.81": {
+          "hostname": "Device-155-235-81-81",
+          "mac_address": "80-3F-5D-F6-9D-6A",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:40:29.528475"
+        },
+        "155.235.81.77": {
+          "hostname": "Device-155-235-81-77",
+          "mac_address": "68-D7-9A-16-E2-89",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:40:34.513350"
+        },
+        "155.235.81.97": {
+          "hostname": "Device-155-235-81-97",
+          "mac_address": "00:C0:EE:AC:E6:28",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:40:39.652627"
+        },
+        "155.235.81.99": {
+          "hostname": "KMD8132E",
+          "mac_address": "00:C0:EE:D8:13:2E",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T15:12:46.600423",
+          "custom_name": "Printer reception",
+          "updated_at": "2025-07-23T15:12:46.600403",
+          "updated_by": "admin"
+        },
+        "155.235.81.100": {
+          "hostname": "sto-emp-uvdb01.stoyanov.local",
+          "mac_address": "00-0C-29-9B-72-75",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:40:40.188614"
+        },
+        "155.235.81.101": {
+          "hostname": "sto-emp-uvapp01.stoyanov.local",
+          "mac_address": "00:0C:29:19:0F:18",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:40:40.191888"
+        },
+        "155.235.81.102": {
+          "hostname": "sto-emp-uvext01.stoyanov.local",
+          "mac_address": "00-50-56-A7-E8-40",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:40:40.215127"
+        },
+        "155.235.81.103": {
+          "hostname": "Device-155-235-81-103",
+          "mac_address": "00-90-FB-65-FE-9D",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:40:45.160658"
+        },
+        "155.235.81.107": {
+          "hostname": "Device-155-235-81-107",
+          "mac_address": "00-04-5F-17-8B-FC",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:40:50.244967"
+        },
+        "155.235.81.119": {
+          "hostname": "EMPANGENI-PCS",
+          "mac_address": "00:24:21:2F:7E:9D",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:40:51.716457"
+        },
+        "155.235.81.120": {
+          "hostname": "PCC_CT_PC",
+          "mac_address": "BC:E9:2F:A8:1C:54",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:40:52.138599"
+        },
+        "155.235.81.122": {
+          "hostname": "PHILIPS-Q3B2CC",
+          "mac_address": "00-1A-A0-C0-52-44",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:40:53.418961"
+        },
+        "155.235.81.123": {
+          "hostname": "PHILIPS-9B706CF",
+          "mac_address": "00-1A-A0-C1-79-76",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:40:54.703319"
+        },
+        "155.235.81.128": {
+          "hostname": "Device-155-235-81-128",
+          "mac_address": "3C-EC-EF-78-EB-E7",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:40:59.823732"
+        },
+        "155.235.81.136": {
+          "hostname": "STO-EMP-PCS",
+          "mac_address": "90:B1:1C:87:72:62",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:41:00.477482"
+        },
+        "155.235.81.138": {
+          "hostname": "Liaison",
+          "mac_address": "F8:B1:56:C0:A6:F2",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:41:00.898439"
+        },
+        "155.235.81.148": {
+          "hostname": "Device-155-235-81-148",
+          "mac_address": "C8:4F:86:EC:49:AB",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T15:29:36.785367",
+          "custom_name": "Sophos firewall",
+          "updated_at": "2025-07-23T15:29:36.785344",
+          "updated_by": "admin"
+        },
+        "155.235.81.149": {
+          "hostname": "Sheero-Pc",
+          "mac_address": "F8:B1:56:BC:B9:CD",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:41:08.418894"
+        },
+        "155.235.81.155": {
+          "hostname": "STO-EMP-CT",
+          "mac_address": "24:5E:BE:15:FB:9A",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T15:28:59.841886",
+          "custom_name": "Pandora NAS",
+          "updated_at": "2025-07-23T15:28:59.841863",
+          "updated_by": "admin"
+        },
+        "155.235.81.154": {
+          "hostname": "Device-155-235-81-154",
+          "mac_address": "F4:B1:C2:3A:C1:60",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:41:14.824625"
+        },
+        "155.235.81.159": {
+          "hostname": "TMP-HP",
+          "mac_address": "00:E0:4C:68:A8:7F",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:41:15.251790"
+        },
+        "155.235.81.167": {
+          "hostname": "Device-155-235-81-167",
+          "mac_address": "74-FE-48-3C-33-F8",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:41:20.393391"
+        },
+        "155.235.81.166": {
+          "hostname": "empangeni_wks5",
+          "mac_address": "F4:8E:38:81:EC:DC",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:41:20.827687"
+        },
+        "155.235.81.170": {
+          "hostname": "Device-155-235-81-170",
+          "mac_address": "00:C0:2D:12:6A:FE",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:41:25.782868"
+        },
+        "155.235.81.181": {
+          "hostname": "Device-155-235-81-181",
+          "mac_address": "78-45-58-A2-53-96",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:41:30.937731"
+        },
+        "155.235.81.179": {
+          "hostname": "CR36ZDD5J",
+          "mac_address": "00-25-64-AD-EB-C6",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:41:31.381532"
+        },
+        "155.235.81.180": {
+          "hostname": "Device-155-235-81-180",
+          "mac_address": "78-45-58-A2-54-E9",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:41:36.343834"
+        },
+        "155.235.81.188": {
+          "hostname": "Empangeni_wks8",
+          "mac_address": "D4:BE:D9:D4:C8:8B",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:41:36.929518"
+        },
+        "155.235.81.190": {
+          "hostname": "Emp-pcs",
+          "mac_address": "B8:CA:3A:7C:31:4A",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:41:37.358531"
+        },
+        "155.235.81.185": {
+          "hostname": "TYPIST-2",
+          "mac_address": "B8:CA:3A:7C:22:9B",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:41:37.783798"
+        },
+        "155.235.81.184": {
+          "hostname": "STO-EMP-TYPIST3",
+          "mac_address": "90:B1:1C:99:4E:E4",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:41:38.222625"
+        },
+        "155.235.81.186": {
+          "hostname": "Typist-1",
+          "mac_address": "B8:CA:3A:94:E5:FB",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:41:38.654179"
+        },
+        "155.235.81.200": {
+          "hostname": "Device-155-235-81-200",
+          "mac_address": "F4:F2:6D:C9:C7:69",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:41:44.436129"
+        },
+        "155.235.81.196": {
+          "hostname": "EMPANGENI_BMD",
+          "mac_address": "00:04:61:4E:36:95",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T15:31:36.383563",
+          "custom_name": "Bone density Machine",
+          "updated_at": "2025-07-23T15:31:36.383543",
+          "updated_by": "admin"
+        },
+        "155.235.81.201": {
+          "hostname": "Device-155-235-81-201",
+          "mac_address": "6C-AE-8B-69-5A-25",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T15:30:48.792970",
+          "custom_name": "AS400 server",
+          "updated_at": "2025-07-23T15:30:48.792950",
+          "updated_by": "admin"
+        },
+        "155.235.81.202": {
+          "hostname": "Device-155-235-81-202",
+          "mac_address": "90-8D-78-10-AE-61",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:41:55.629204"
+        },
+        "155.235.81.215": {
+          "hostname": "sto-emp-rackcsl.stoyanov.local",
+          "mac_address": "D4:BE:D9:D4:C8:8C",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:41:58.633173"
+        },
+        "155.235.81.218": {
+          "hostname": "Device-155-235-81-218",
+          "mac_address": "00-D0-C9-C1-15-5F",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:42:03.588163"
+        },
+        "155.235.81.222": {
+          "hostname": "Device-155-235-81-222",
+          "mac_address": "18:D6:C7:A7:E3:BE",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:42:08.525295"
+        },
+        "155.235.81.240": {
+          "hostname": "Device-155-235-81-240",
+          "mac_address": "3C:EF:8C:09:64:97",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:42:16.567785"
+        },
+        "155.235.81.236": {
+          "hostname": "Device-155-235-81-236",
+          "mac_address": "00-0E-8E-87-AF-AC",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:42:21.541112"
+        },
+        "155.235.81.245": {
+          "hostname": "Device-155-235-81-245",
+          "mac_address": "00-01-A9-01-01-85",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:42:26.694932"
+        },
+        "155.235.81.254": {
+          "hostname": "STO-EMP-RAD01",
+          "mac_address": "98:90:96:A1:AE:30",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T13:42:27.340880"
+        },
+        "155.235.81.48": {
+          "hostname": "Device-155-235-81-48",
+          "mac_address": "EA-BF-95-B7-DB-DB",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T14:54:46.945537"
+        },
+        "155.235.81.43": {
+          "hostname": "Device-155-235-81-43",
+          "mac_address": "D2:5E:76:06:F7:44",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T15:25:44.348515"
+        },
+        "155.235.81.66": {
+          "ip_address": "155.235.81.66",
+          "hostname": "155.235.81.66",
+          "mac_address": "00:45:e2:18:31:3b",
+          "custom_name": "Support",
+          "device_type": "unknown",
+          "manufacturer": "Unknown",
+          "last_seen": "2025-07-23T15:27:33.055346",
+          "updated_by": "admin"
+        },
+        "155.235.81.63": {
+          "hostname": "Device-155-235-81-63",
+          "mac_address": "E6:A7:29:25:5A:6D",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T15:59:17.464304"
+        }
+      }
+    },
+    "stoyanov-network": {
+      "name": "stoyanov-network",
+      "devices": {
+        "155.235.81.93": {
+          "hostname": "sto-emp-dc01.stoyanov.local",
+          "mac_address": "00:50:56:A4:79:4B",
+          "device_type": "unknown",
+          "manufacturer": "unknown",
+          "last_seen": "2025-07-23T15:59:00.362256",
+          "ip_address": "155.235.81.93"
+        }
+      }
+    }
+  },
+  "metadata": {
+    "version": "1.0",
+    "last_updated": "2025-07-30T20:27:02.750445",
+    "total_devices": 91,
+    "total_networks": 3
+  }
+}

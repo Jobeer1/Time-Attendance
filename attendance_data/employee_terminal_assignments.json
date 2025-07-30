@@ -1,0 +1,22 @@
+[
+  {
+    "id": "5c50d972-669f-4c0f-9be2-7004efe16754",
+    "created_at": "2025-07-13T14:56:47.785027",
+    "updated_at": "2025-07-13T14:56:47.785567",
+    "assignment_id": "fb9ce1e2-2bb2-436d-8fd9-26fa80d6907a",
+    "employee_id": "EMP002",
+    "terminal_id": "ebd3af36-207b-4dd0-8d3b-358dece8ec86",
+    "is_active": true,
+    "assigned_by": "c69041d2-636a-4bfc-864a-d709b3332975",
+    "assigned_date": "2025-07-13T14:56:47.785027",
+    "effective_date": "2025-07-13T14:56:47.785567",
+    "expiry_date": "",
+    "assignment_type": "shared",
+    "priority": 1,
+    "allowed_time_start": "",
+    "allowed_time_end": "",
+    "allowed_days": [],
+    "reason": "",
+    "notes": "It's your workstation "
+  }
+]

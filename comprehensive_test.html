@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Camera System Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Live Camera System Test</h1>
+        
+        <!-- Test Results -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Test Results</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="testResults">
+                            <p>Click "Run Full Test" to test the complete system</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Test Buttons -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <button class="btn btn-primary me-2" onclick="runFullTest()">Run Full Test</button>
+                <button class="btn btn-secondary me-2" onclick="testAlerts()">Test Alerts</button>
+                <button class="btn btn-info me-2" onclick="testAPI()">Test API</button>
+                <button class="btn btn-success me-2" onclick="addTestCamera()">Add Test Camera</button>
+                <button class="btn btn-warning me-2" onclick="checkCameraStatus()">Check Camera Status</button>
+            </div>
+        </div>
+        
+        <!-- Alert Container -->
+        <div id="alertContainer" class="row mb-3">
+            <div class="col-12">
+                <div id="alertContent"></div>
+            </div>
+        </div>
+        
+        <!-- Camera Status -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Current Camera Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="cameraStatus">
+                            <p>No status data yet</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Test Results Management
+        let testResults = [];
+        
+        function addTestResult(test, success, message) {
+            testResults.push({
+                test: test,
+                success: success,
+                message: message,
+                timestamp: new Date().toISOString()
+            });
+            updateTestResults();
+        }
+        
+        function updateTestResults() {
+            const resultsDiv = document.getElementById('testResults');
+            resultsDiv.innerHTML = '';
+            
+            testResults.forEach((result, index) => {
+                const resultDiv = document.createElement('div');
+                resultDiv.className = `alert ${result.success ? 'alert-success' : 'alert-danger'} py-2`;
+                resultDiv.innerHTML = `
+                    <strong>${result.test}:</strong> ${result.message}
+                    <small class="text-muted float-end">${new Date(result.timestamp).toLocaleTimeString()}</small>
+                `;
+                resultsDiv.appendChild(resultDiv);
+            });
+        }
+        
+        // Alert System
+        function showAlert(type, message) {
+            console.log('showAlert called with type:', type, 'message:', message);
+            
+            let alertClass = 'alert-info';
+            switch(type) {
+                case 'success':
+                    alertClass = 'alert-success';
+                    break;
+                case 'error':
+                case 'danger':
+                    alertClass = 'alert-danger';
+                    break;
+                case 'warning':
+                    alertClass = 'alert-warning';
+                    break;
+                case 'info':
+                default:
+                    alertClass = 'alert-info';
+                    break;
+            }
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert ${alertClass} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                <strong>${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</strong> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            const alertContainer = document.getElementById('alertContainer');
+            const alertContent = document.getElementById('alertContent');
+            
+            if (alertContainer && alertContent) {
+                alertContent.innerHTML = '';
+                alertContent.appendChild(alertDiv);
+                alertContainer.style.display = 'block';
+                
+                setTimeout(() => {
+                    alertContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            }
+            
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+        
+        // Test Functions
+        async function runFullTest() {
+            testResults = [];
+            showAlert('info', 'Starting full system test...');
+            
+            try {
+                // Test 1: API Status
+                await testAPI();
+                
+                // Test 2: Add Camera
+                await addTestCamera();
+                
+                // Test 3: Check Camera Status
+                await checkCameraStatus();
+                
+                // Test 4: Alert System
+                testAlerts();
+                
+                addTestResult('Full Test', true, 'All tests completed successfully');
+                showAlert('success', 'Full system test completed successfully!');
+                
+            } catch (error) {
+                addTestResult('Full Test', false, 'Test failed: ' + error.message);
+                showAlert('error', 'Full test failed: ' + error.message);
+            }
+        }
+        
+        async function testAPI() {
+            try {
+                const response = await fetch('/api/live-camera/status', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addTestResult('API Status', true, `API responded with ${Object.keys(data.cameras || {}).length} cameras`);
+                    return data;
+                } else {
+                    addTestResult('API Status', false, `API responded with status ${response.status}`);
+                    throw new Error('API request failed');
+                }
+            } catch (error) {
+                addTestResult('API Status', false, 'API request failed: ' + error.message);
+                throw error;
+            }
+        }
+        
+        async function addTestCamera() {
+            const testCameraData = {
+                camera_id: `test_camera_${Date.now()}`,
+                name: 'Test Camera',
+                stream_url: 'http://155.235.81.65/webcamera.html',
+                zone_id: 'entrance_main',
+                enabled: true,
+                recognition_interval: 2.0,
+                confidence_threshold: 0.7
+            };
+            
+            try {
+                const response = await fetch('/api/live-camera/cameras', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testCameraData)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        addTestResult('Add Camera', true, `Camera "${testCameraData.name}" added successfully`);
+                        showAlert('success', `Camera "${testCameraData.name}" added successfully`);
+                        return data;
+                    } else {
+                        addTestResult('Add Camera', false, 'Camera addition failed: ' + data.error);
+                        throw new Error(data.error);
+                    }
+                } else {
+                    addTestResult('Add Camera', false, `Camera addition failed with status ${response.status}`);
+                    throw new Error('Camera addition request failed');
+                }
+            } catch (error) {
+                addTestResult('Add Camera', false, 'Camera addition failed: ' + error.message);
+                throw error;
+            }
+        }
+        
+        async function checkCameraStatus() {
+            try {
+                const response = await fetch('/api/live-camera/status', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const cameras = data.cameras || {};
+                    const cameraCount = Object.keys(cameras).length;
+                    
+                    // Update camera status display
+                    const statusDiv = document.getElementById('cameraStatus');
+                    statusDiv.innerHTML = `
+                        <p><strong>Total Cameras:</strong> ${cameraCount}</p>
+                        <p><strong>Active Cameras:</strong> ${data.status?.active_cameras || 0}</p>
+                        <p><strong>System Status:</strong> ${data.status?.face_recognition_enabled ? 'Online' : 'Offline'}</p>
+                    `;
+                    
+                    if (cameraCount > 0) {
+                        statusDiv.innerHTML += '<h6>Cameras:</h6><ul>';
+                        Object.entries(cameras).forEach(([id, camera]) => {
+                            statusDiv.innerHTML += `<li><strong>${camera.name}</strong> (${id}) - ${camera.enabled ? 'Enabled' : 'Disabled'}</li>`;
+                        });
+                        statusDiv.innerHTML += '</ul>';
+                    }
+                    
+                    addTestResult('Camera Status', true, `Found ${cameraCount} cameras in system`);
+                    return data;
+                } else {
+                    addTestResult('Camera Status', false, `Status check failed with status ${response.status}`);
+                    throw new Error('Status check failed');
+                }
+            } catch (error) {
+                addTestResult('Camera Status', false, 'Status check failed: ' + error.message);
+                throw error;
+            }
+        }
+        
+        function testAlerts() {
+            addTestResult('Alert System', true, 'Testing alert system...');
+            
+            setTimeout(() => {
+                showAlert('success', 'Success alert test');
+            }, 500);
+            
+            setTimeout(() => {
+                showAlert('error', 'Error alert test');
+            }, 1000);
+            
+            setTimeout(() => {
+                showAlert('warning', 'Warning alert test');
+            }, 1500);
+            
+            setTimeout(() => {
+                showAlert('info', 'Info alert test');
+            }, 2000);
+            
+            setTimeout(() => {
+                addTestResult('Alert System', true, 'All alert types tested');
+            }, 2500);
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Live Camera System Test Page Loaded');
+            checkCameraStatus();
+        });
+    </script>
+</body>
+</html>

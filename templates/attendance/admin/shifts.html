@@ -1,0 +1,809 @@
+{% extends "attendance/base.html" %}
+
+{% block title %}Shift Management{% endblock %}
+
+{% block head %}
+<style>
+.shift-card {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    transition: box-shadow 0.2s;
+}
+
+.shift-card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.shift-time {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    color: #495057;
+}
+
+.break-time {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 0.85em;
+}
+
+.leave-policy {
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 0.85em;
+}
+
+.shift-status {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.time-input {
+    width: 100px;
+}
+
+.day-checkbox {
+    margin-right: 10px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Shift Management</h1>
+            <p class="text-muted">Manage work shifts, schedules, break times, and leave policies</p>
+        </div>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createShiftModal">
+            <i class="fas fa-plus me-2"></i>Create New Shift
+        </button>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="h5 mb-0">{{ shifts|length }}</div>
+                            <div class="small">Total Shifts</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="h5 mb-0">{{ shifts|selectattr('is_active', 'equalto', true)|list|length }}</div>
+                            <div class="small">Active Shifts</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="h5 mb-0">{{ employees|length }}</div>
+                            <div class="small">Total Employees</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="h5 mb-0">{{ shifts|selectattr('overtime_enabled', 'equalto', true)|list|length }}</div>
+                            <div class="small">Overtime Enabled</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-business-time fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shifts List -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Shifts</h5>
+            <div class="d-flex gap-2">
+                <select class="form-select form-select-sm" id="statusFilter" style="width: auto;">
+                    <option value="">All Shifts</option>
+                    <option value="active">Active Only</option>
+                    <option value="inactive">Inactive Only</option>
+                </select>
+                <input type="text" class="form-control form-control-sm" id="searchShifts" placeholder="Search shifts..." style="width: 200px;">
+            </div>
+        </div>
+        <div class="card-body">
+            {% if shifts %}
+                <div class="row" id="shiftsContainer">
+                    {% for shift in shifts %}
+                    <div class="col-md-6 col-lg-4 mb-4 shift-item" data-shift-id="{{ shift.id }}" data-status="{{ 'active' if shift.is_active else 'inactive' }}">
+                        <div class="shift-card p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h6 class="mb-0">{{ shift.name }}</h6>
+                                <span class="badge shift-status {{ 'bg-success' if shift.is_active else 'bg-secondary' }}">
+                                    {{ 'Active' if shift.is_active else 'Inactive' }}
+                                </span>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="small text-muted mb-1">Work Hours</div>
+                                <div class="shift-time">
+                                    <i class="fas fa-clock me-1"></i>
+                                    {{ shift.start_time }} - {{ shift.end_time }}
+                                </div>
+                                <div class="small text-muted mt-1">
+                                    Duration: {{ shift.hours_per_day }}h
+                                </div>
+                            </div>
+
+                            {% if shift.break_times %}
+                            <div class="mb-3">
+                                <div class="small text-muted mb-1">Break Times</div>
+                                {% for break_time in shift.break_times %}
+                                <span class="break-time me-1">
+                                    <i class="fas fa-coffee me-1"></i>
+                                    {{ break_time.start_time }} - {{ break_time.end_time }}
+                                    ({{ break_time.duration }}min)
+                                </span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            {% if shift.working_days %}
+                            <div class="mb-3">
+                                <div class="small text-muted mb-1">Working Days</div>
+                                <div class="small">
+                                    {% for day in shift.working_days %}
+                                        <span class="badge bg-light text-dark me-1">{{ day|title }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if shift.leave_policy %}
+                            <div class="mb-3">
+                                <div class="small text-muted mb-1">Leave Policy</div>
+                                <span class="leave-policy">
+                                    <i class="fas fa-calendar-times me-1"></i>
+                                    {{ shift.leave_policy.annual_days }} annual, {{ shift.leave_policy.sick_days }} sick
+                                </span>
+                            </div>
+                            {% endif %}
+
+                            <div class="mt-auto">
+                                <div class="btn-group w-100" role="group">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="editShift('{{ shift.id }}')">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button type="button" class="btn btn-outline-info btn-sm" onclick="assignEmployees('{{ shift.id }}')">
+                                        <i class="fas fa-users"></i> Assign
+                                    </button>
+                                    <button type="button" class="btn btn-outline-{{ 'secondary' if shift.is_active else 'success' }} btn-sm" onclick="toggleShiftStatus('{{ shift.id }}', {{ 'false' if shift.is_active else 'true' }})">
+                                        <i class="fas fa-{{ 'pause' if shift.is_active else 'play' }}"></i>
+                                        {{ 'Deactivate' if shift.is_active else 'Activate' }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Shifts Configured</h5>
+                    <p class="text-muted">Create your first shift to get started with schedule management.</p>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createShiftModal">
+                        <i class="fas fa-plus me-2"></i>Create First Shift
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit Shift Modal -->
+<div class="modal fade" id="createShiftModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Shift</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="shiftForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <!-- Basic Information -->
+                        <div class="col-md-6">
+                            <h6 class="mb-3">Basic Information</h6>
+                            
+                            <div class="mb-3">
+                                <label for="shiftName" class="form-label">Shift Name *</label>
+                                <input type="text" class="form-control" id="shiftName" name="name" required placeholder="e.g., Morning Shift, Night Shift">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="shiftDescription" class="form-label">Description</label>
+                                <textarea class="form-control" id="shiftDescription" name="description" rows="2" placeholder="Brief description of this shift"></textarea>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="startTime" class="form-label">Start Time *</label>
+                                        <input type="time" class="form-control time-input" id="startTime" name="start_time" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="endTime" class="form-label">End Time *</label>
+                                        <input type="time" class="form-control time-input" id="endTime" name="end_time" required>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="hoursPerDay" class="form-label">Hours per Day</label>
+                                <input type="number" class="form-control" id="hoursPerDay" name="hours_per_day" min="1" max="24" step="0.5" placeholder="8">
+                            </div>
+                        </div>
+                        
+                        <!-- Working Days -->
+                        <div class="col-md-6">
+                            <h6 class="mb-3">Working Days</h6>
+                            
+                            <div class="mb-3">
+                                <div class="form-check day-checkbox">
+                                    <input class="form-check-input" type="checkbox" id="monday" name="working_days" value="monday">
+                                    <label class="form-check-label" for="monday">Monday</label>
+                                </div>
+                                <div class="form-check day-checkbox">
+                                    <input class="form-check-input" type="checkbox" id="tuesday" name="working_days" value="tuesday">
+                                    <label class="form-check-label" for="tuesday">Tuesday</label>
+                                </div>
+                                <div class="form-check day-checkbox">
+                                    <input class="form-check-input" type="checkbox" id="wednesday" name="working_days" value="wednesday">
+                                    <label class="form-check-label" for="wednesday">Wednesday</label>
+                                </div>
+                                <div class="form-check day-checkbox">
+                                    <input class="form-check-input" type="checkbox" id="thursday" name="working_days" value="thursday">
+                                    <label class="form-check-label" for="thursday">Thursday</label>
+                                </div>
+                                <div class="form-check day-checkbox">
+                                    <input class="form-check-input" type="checkbox" id="friday" name="working_days" value="friday">
+                                    <label class="form-check-label" for="friday">Friday</label>
+                                </div>
+                                <div class="form-check day-checkbox">
+                                    <input class="form-check-input" type="checkbox" id="saturday" name="working_days" value="saturday">
+                                    <label class="form-check-label" for="saturday">Saturday</label>
+                                </div>
+                                <div class="form-check day-checkbox">
+                                    <input class="form-check-input" type="checkbox" id="sunday" name="working_days" value="sunday">
+                                    <label class="form-check-label" for="sunday">Sunday</label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="isActive" name="is_active" checked>
+                                    <label class="form-check-label" for="isActive">Active Shift</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="overtimeEnabled" name="overtime_enabled">
+                                    <label class="form-check-label" for="overtimeEnabled">Allow Overtime</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Break Times -->
+                    <hr>
+                    <h6 class="mb-3">Break Times</h6>
+                    <div id="breakTimesContainer">
+                        <!-- Break times will be added dynamically -->
+                    </div>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addBreakTime()">
+                        <i class="fas fa-plus me-1"></i>Add Break Time
+                    </button>
+                    
+                    <!-- Leave Policy -->
+                    <hr>
+                    <h6 class="mb-3">Leave Policy</h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="annualLeaveDays" class="form-label">Annual Leave Days</label>
+                                <input type="number" class="form-control" id="annualLeaveDays" name="annual_leave_days" min="0" max="365" placeholder="21">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="sickLeaveDays" class="form-label">Sick Leave Days</label>
+                                <input type="number" class="form-control" id="sickLeaveDays" name="sick_leave_days" min="0" max="365" placeholder="10">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="personalLeaveDays" class="form-label">Personal Leave Days</label>
+                                <input type="number" class="form-control" id="personalLeaveDays" name="personal_leave_days" min="0" max="365" placeholder="5">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Shift</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentShiftId = null;
+let breakTimeCounter = 0;
+
+// Search and filter functionality
+document.getElementById('searchShifts').addEventListener('input', function() {
+    filterShifts();
+});
+
+document.getElementById('statusFilter').addEventListener('change', function() {
+    filterShifts();
+});
+
+function filterShifts() {
+    const searchTerm = document.getElementById('searchShifts').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value;
+    const shiftItems = document.querySelectorAll('.shift-item');
+    
+    shiftItems.forEach(function(item) {
+        const shiftName = item.querySelector('h6').textContent.toLowerCase();
+        const shiftStatus = item.dataset.status;
+        
+        const matchesSearch = shiftName.includes(searchTerm);
+        const matchesStatus = !statusFilter || shiftStatus === statusFilter;
+        
+        if (matchesSearch && matchesStatus) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+// Edit shift functionality
+function editShift(shiftId) {
+    fetch(`/admin/api/shifts/${shiftId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                populateShiftForm(data.shift);
+                currentShiftId = shiftId;
+                document.querySelector('#createShiftModal .modal-title').textContent = 'Edit Shift';
+                document.querySelector('#createShiftModal button[type="submit"]').textContent = 'Update Shift';
+                new bootstrap.Modal(document.getElementById('createShiftModal')).show();
+            } else {
+                showAlert(data.message || 'Failed to load shift data', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading shift:', error);
+            showAlert('Failed to load shift data', 'error');
+        });
+}
+
+// Populate form with shift data
+function populateShiftForm(shift) {
+    document.getElementById('shiftName').value = shift.name || '';
+    document.getElementById('shiftDescription').value = shift.description || '';
+    document.getElementById('startTime').value = shift.start_time || '';
+    document.getElementById('endTime').value = shift.end_time || '';
+    document.getElementById('hoursPerDay').value = shift.hours_per_day || 8;
+    document.getElementById('isActive').checked = shift.is_active !== false;
+    document.getElementById('overtimeEnabled').checked = shift.overtime_enabled === true;
+
+    // Set working days
+    const workingDays = shift.working_days || ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+    ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].forEach(day => {
+        document.getElementById(day).checked = workingDays.includes(day);
+    });
+
+    // Set leave policy
+    if (shift.leave_policy) {
+        document.getElementById('annualLeaveDays').value = shift.leave_policy.annual_leave_days || '';
+        document.getElementById('sickLeaveDays').value = shift.leave_policy.sick_leave_days || '';
+        document.getElementById('personalLeaveDays').value = shift.leave_policy.personal_leave_days || '';
+    }
+
+    // Clear and populate break times
+    document.getElementById('breakTimesContainer').innerHTML = '';
+    breakTimeCounter = 0;
+    if (shift.break_times && Array.isArray(shift.break_times)) {
+        shift.break_times.forEach(breakTime => {
+            addBreakTime();
+            const breakRow = document.querySelector(`[data-break-id="${breakTimeCounter}"]`);
+            if (breakRow) {
+                breakRow.querySelector(`[name="break_start_${breakTimeCounter}"]`).value = breakTime.start_time || '';
+                breakRow.querySelector(`[name="break_end_${breakTimeCounter}"]`).value = breakTime.end_time || '';
+                breakRow.querySelector(`[name="break_duration_${breakTimeCounter}"]`).value = breakTime.duration || '';
+            }
+        });
+    }
+}
+
+// Assign employees to shift
+function assignEmployees(shiftId) {
+    fetch(`/admin/api/shifts/${shiftId}/employees`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showEmployeeAssignmentModal(shiftId, data.assigned_employees, data.available_employees);
+            } else {
+                showAlert(data.message || 'Failed to load employee data', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading employees:', error);
+            showAlert('Failed to load employee data', 'error');
+        });
+}
+
+// Show employee assignment modal
+function showEmployeeAssignmentModal(shiftId, assignedEmployees, availableEmployees) {
+    const modalHtml = `
+        <div class="modal fade" id="assignEmployeeModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Assign Employees to Shift</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Available Employees</h6>
+                                <div class="border rounded p-3" style="height: 300px; overflow-y: auto;" id="availableEmployees">
+                                    ${availableEmployees.map(emp => `
+                                        <div class="employee-item mb-2 p-2 border rounded" data-employee-id="${emp.id}">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <strong>${emp.first_name} ${emp.last_name}</strong><br>
+                                                    <small class="text-muted">${emp.employee_id} - ${emp.department || 'N/A'}</small>
+                                                </div>
+                                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="assignEmployee('${emp.id}')">
+                                                    <i class="fas fa-arrow-right"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Assigned Employees</h6>
+                                <div class="border rounded p-3" style="height: 300px; overflow-y: auto;" id="assignedEmployees">
+                                    ${assignedEmployees.map(emp => `
+                                        <div class="employee-item mb-2 p-2 border rounded" data-employee-id="${emp.id}">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <strong>${emp.first_name} ${emp.last_name}</strong><br>
+                                                    <small class="text-muted">${emp.employee_id} - ${emp.department || 'N/A'}</small>
+                                                </div>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="unassignEmployee('${emp.id}')">
+                                                    <i class="fas fa-arrow-left"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="saveEmployeeAssignments('${shiftId}')">Save Assignments</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Remove existing modal if any
+    const existingModal = document.getElementById('assignEmployeeModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Show modal
+    new bootstrap.Modal(document.getElementById('assignEmployeeModal')).show();
+}
+
+// Move employee from available to assigned
+function assignEmployee(employeeId) {
+    const employeeItem = document.querySelector(`#availableEmployees [data-employee-id="${employeeId}"]`);
+    if (employeeItem) {
+        const assignedContainer = document.getElementById('assignedEmployees');
+        
+        // Update button
+        const button = employeeItem.querySelector('button');
+        button.className = 'btn btn-sm btn-outline-danger';
+        button.innerHTML = '<i class="fas fa-arrow-left"></i>';
+        button.setAttribute('onclick', `unassignEmployee('${employeeId}')`);
+        
+        // Move to assigned section
+        assignedContainer.appendChild(employeeItem);
+    }
+}
+
+// Move employee from assigned to available
+function unassignEmployee(employeeId) {
+    const employeeItem = document.querySelector(`#assignedEmployees [data-employee-id="${employeeId}"]`);
+    if (employeeItem) {
+        const availableContainer = document.getElementById('availableEmployees');
+        
+        // Update button
+        const button = employeeItem.querySelector('button');
+        button.className = 'btn btn-sm btn-outline-primary';
+        button.innerHTML = '<i class="fas fa-arrow-right"></i>';
+        button.setAttribute('onclick', `assignEmployee('${employeeId}')`);
+        
+        // Move to available section
+        availableContainer.appendChild(employeeItem);
+    }
+}
+
+// Save employee assignments
+function saveEmployeeAssignments(shiftId) {
+    const assignedEmployees = Array.from(document.querySelectorAll('#assignedEmployees [data-employee-id]'))
+        .map(item => item.getAttribute('data-employee-id'));
+
+    fetch(`/admin/api/shifts/${shiftId}/assign`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            employee_ids: assignedEmployees
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(data.message || 'Employee assignments saved successfully', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('assignEmployeeModal')).hide();
+            // Refresh the page to show updated assignments
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showAlert(data.message || 'Failed to save assignments', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Failed to save assignments', 'error');
+    });
+}
+
+// Toggle shift status (activate/deactivate)
+function toggleShiftStatus(shiftId, newStatus) {
+    const action = newStatus ? 'activate' : 'deactivate';
+    
+    if (!confirm(`Are you sure you want to ${action} this shift?`)) {
+        return;
+    }
+
+    fetch(`/admin/api/shifts/${shiftId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            is_active: newStatus
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(`Shift ${action}d successfully`, 'success');
+            // Refresh the page to show updated status
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showAlert(data.message || `Failed to ${action} shift`, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert(`Failed to ${action} shift`, 'error');
+    });
+}
+
+// Add break time
+function addBreakTime() {
+    breakTimeCounter++;
+    const container = document.getElementById('breakTimesContainer');
+    const breakTimeHtml = `
+        <div class="row mb-2 break-time-row" data-break-id="${breakTimeCounter}">
+            <div class="col-md-3">
+                <input type="time" class="form-control" name="break_start_${breakTimeCounter}" placeholder="Start Time">
+            </div>
+            <div class="col-md-3">
+                <input type="time" class="form-control" name="break_end_${breakTimeCounter}" placeholder="End Time">
+            </div>
+            <div class="col-md-3">
+                <input type="number" class="form-control" name="break_duration_${breakTimeCounter}" placeholder="Duration (min)" min="1" max="480">
+            </div>
+            <div class="col-md-3">
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeBreakTime(${breakTimeCounter})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', breakTimeHtml);
+}
+
+function removeBreakTime(breakId) {
+    const breakRow = document.querySelector(`[data-break-id="${breakId}"]`);
+    if (breakRow) {
+        breakRow.remove();
+    }
+}
+
+// Form submission
+document.getElementById('shiftForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const shiftData = {};
+    
+    // Basic fields
+    shiftData.name = formData.get('name');
+    shiftData.description = formData.get('description');
+    shiftData.start_time = formData.get('start_time');
+    shiftData.end_time = formData.get('end_time');
+    shiftData.hours_per_day = parseFloat(formData.get('hours_per_day')) || 8;
+    shiftData.is_active = formData.get('is_active') === 'on';
+    shiftData.overtime_enabled = formData.get('overtime_enabled') === 'on';
+    
+    // Working days
+    shiftData.working_days = [];
+    const workingDays = formData.getAll('working_days');
+    shiftData.working_days = workingDays;
+    
+    // Break times
+    shiftData.break_times = [];
+    const breakRows = document.querySelectorAll('.break-time-row');
+    breakRows.forEach(function(row) {
+        const breakId = row.dataset.breakId;
+        const startTime = formData.get(`break_start_${breakId}`);
+        const endTime = formData.get(`break_end_${breakId}`);
+        const duration = formData.get(`break_duration_${breakId}`);
+        
+        if (startTime && endTime) {
+            shiftData.break_times.push({
+                start_time: startTime,
+                end_time: endTime,
+                duration: parseInt(duration) || 30
+            });
+        }
+    });
+    
+    // Leave policy
+    shiftData.leave_policy = {
+        annual_days: parseInt(formData.get('annual_leave_days')) || 21,
+        sick_days: parseInt(formData.get('sick_leave_days')) || 10,
+        personal_days: parseInt(formData.get('personal_leave_days')) || 5
+    };
+      // Submit to server
+    const isEdit = currentShiftId !== null;
+    const url = isEdit ? `/admin/api/shifts/${currentShiftId}` : '/admin/api/shifts';
+    const method = isEdit ? 'PUT' : 'POST';
+    
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(shiftData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(isEdit ? 'Shift updated successfully!' : 'Shift created successfully!', 'success');
+            
+            // Reset form and modal
+            resetShiftModal();
+            location.reload();
+        } else {
+            showAlert(data.message || (isEdit ? 'Failed to update shift' : 'Failed to create shift'), 'error');
+        }
+    })    .catch(error => {
+        console.error('Error:', error);
+        showAlert(isEdit ? 'Failed to update shift' : 'Failed to create shift', 'error');
+    });
+});
+
+// Utility function for alerts
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container-fluid');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+
+// Reset shift modal to create mode
+function resetShiftModal() {
+    currentShiftId = null;
+    document.querySelector('#createShiftModal .modal-title').textContent = 'Create New Shift';
+    document.querySelector('#createShiftModal button[type="submit"]').textContent = 'Create Shift';
+    document.getElementById('shiftForm').reset();
+    
+    // Clear break times container
+    document.getElementById('breakTimesContainer').innerHTML = '';
+    breakTimeCounter = 0;
+    
+    // Reset working days to default (Monday-Friday)
+    ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].forEach(day => {
+        document.getElementById(day).checked = true;
+    });
+    ['saturday', 'sunday'].forEach(day => {
+        document.getElementById(day).checked = false;
+    });
+}
+
+// Handle modal close to reset form
+document.getElementById('createShiftModal').addEventListener('hidden.bs.modal', function() {
+    resetShiftModal();
+});
+
+// Initialize default working days (Monday-Friday)
+document.addEventListener('DOMContentLoaded', function() {
+    ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].forEach(day => {
+        document.getElementById(day).checked = true;
+    });
+});
+
+</script>
+{% endblock %}

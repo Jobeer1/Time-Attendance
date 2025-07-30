@@ -1,0 +1,34 @@
+{
+  "LA20250712124809O001": {
+    "id": "LA20250712124809O001",
+    "employee_id": "DEMO001",
+    "leave_type": "annual",
+    "start_date": "2025-07-27T12:48:09.059594",
+    "end_date": "2025-07-31T12:48:09.059595",
+    "days_requested": 4,
+    "reason": "Holiday break",
+    "status": "pending",
+    "applied_date": "2025-07-12T12:48:09.059859",
+    "approved_by": null,
+    "approved_date": null,
+    "rejection_reason": null,
+    "proof_document": null,
+    "comments": null
+  },
+  "LA20250712125849MP01": {
+    "id": "LA20250712125849MP01",
+    "employee_id": "EMP01",
+    "leave_type": "annual",
+    "start_date": "2025-07-22T12:58:49.858118",
+    "end_date": "2025-07-24T12:58:49.858119",
+    "days_requested": 3,
+    "reason": "Weekend getaway",
+    "status": "pending",
+    "applied_date": "2025-07-12T12:58:49.858246",
+    "approved_by": null,
+    "approved_date": null,
+    "rejection_reason": null,
+    "proof_document": null,
+    "comments": null
+  }
+}

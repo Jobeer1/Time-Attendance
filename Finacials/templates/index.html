@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PDF to Excel/CSV Converter</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f6fa; margin: 0; padding: 0; }
+        .container { max-width: 500px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 32px; }
+        h2 { text-align: center; color: #2d3e50; }
+        label { display: block; margin-top: 18px; color: #2d3e50; }
+        input[type="file"], input[type="text"] { width: 100%; padding: 8px; margin-top: 6px; border-radius: 4px; border: 1px solid #ccc; }
+        .radio-group { margin-top: 12px; }
+        .radio-group label { display: inline-block; margin-right: 18px; }
+        button { margin-top: 24px; width: 100%; padding: 12px; background: #0078d4; color: #fff; border: none; border-radius: 4px; font-size: 1.1em; cursor: pointer; }
+        button:hover { background: #005fa3; }
+        .msg { color: #c00; margin-top: 12px; text-align: center; }
+        .progress-container { display: none; margin-top: 20px; }
+        .progress-bar { width: 100%; background-color: #f0f0f0; border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 20px; background-color: #0078d4; width: 0%; transition: width 0.3s; }
+        .progress-fill.processing {
+            background: linear-gradient(90deg, #0078d4, #40a9ff, #0078d4);
+            background-size: 200% 100%;
+            animation: progressShimmer 2s infinite;
+        }
+        .progress-text { text-align: center; margin-top: 10px; color: #333; }
+        .progress-working { 
+            animation: pulse 2s infinite; 
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+        @keyframes progressShimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .batch-section { background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #0078d4; }
+        .batch-section h3 { color: #0078d4; margin-top: 0; }
+        input[type="file"][multiple] { padding: 12px; border: 2px dashed #0078d4; background: #f8f9fa; }
+        .upload-mode-toggle { margin: 10px 0; }
+        .upload-mode-toggle label { display: inline-block; margin-right: 15px; font-weight: normal; cursor: pointer; }
+        .upload-mode-toggle input[type="radio"] { margin-right: 5px; }
+        .folder-note { font-size: 0.9em; color: #666; margin-top: 5px; font-style: italic; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>PDF to Excel/CSV Converter</h2>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="msg">{{ messages[0] }}</div>
+      {% endif %}
+    {% endwith %}
+    <form method="post" action="/pdf_to_images" enctype="multipart/form-data" id="pdf-to-images-form">
+        <label for="pdf_file_step1">Step 1: Convert PDF to Images (High Quality):</label>
+        <input type="file" id="pdf_file_step1" name="pdf_file" accept="application/pdf" required>
+        <label for="output_name1">Output file name (without extension):</label>
+        <input type="text" id="output_name1" name="output_name" placeholder="e.g. my_report" required>
+        <button type="submit" id="pdf-to-images-button">Convert PDF to Images</button>
+        
+        <div class="progress-container" id="progress-container-1">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill-1"></div>
+            </div>
+            <div class="progress-text" id="progress-text-1">Converting PDF pages to images...</div>
+        </div>
+    </form>
+
+    <form method="post" action="/extract_text" enctype="multipart/form-data" id="extract-text-form" style="margin-top:32px;">
+        <label for="pdf_file_step2">Step 2: Extract Text from PDF (Hybrid: Direct + OCR):</label>
+        <input type="file" id="pdf_file_step2" name="pdf_file" accept="application/pdf" required>
+        <label for="output_name2">Output file name (without extension):</label>
+        <input type="text" id="output_name2" name="output_name" placeholder="e.g. my_report" required>
+        <button type="submit" id="extract-text-button">Extract Text (TXT)</button>
+        
+        <div class="progress-container" id="progress-container-2">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill-2"></div>
+            </div>
+            <div class="progress-text" id="progress-text-2">Starting text extraction...</div>
+        </div>
+    </form>
+
+    <form method="post" action="/extract_text_from_images" enctype="multipart/form-data" id="extract-text-from-images-form" style="margin-top:32px;">
+        <label for="zip_file_step25">Step 2.5: Extract Text from ZIP of Images (OCR):</label>
+        <input type="file" id="zip_file_step25" name="zip_file" accept=".zip" required>
+        <label for="output_name25">Output file name (without extension):</label>
+        <input type="text" id="output_name25" name="output_name" placeholder="e.g. my_report" required>
+        <button type="submit" id="extract-text-from-images-button">Extract Text from Images (TXT)</button>
+        
+        <div class="progress-container" id="progress-container-25">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill-25"></div>
+            </div>
+            <div class="progress-text" id="progress-text-25">Starting OCR extraction...</div>
+        </div>
+    </form>
+
+    <form method="post" action="/convert_csv" enctype="multipart/form-data" style="margin-top:32px;">
+        <label for="txt_file">Step 3: Select extracted TXT file to convert to CSV:</label>
+        <input type="file" id="txt_file" name="txt_file" accept=".txt" required>
+        <label for="output_name3">Output file name (without extension):</label>
+        <input type="text" id="output_name3" name="output_name" placeholder="e.g. my_table" required>
+        <button type="submit">Convert to Scrambled CSV</button>
+    </form>
+
+    <form method="post" action="/clean_csv" enctype="multipart/form-data" style="margin-top:32px;">
+        <label for="csv_file">Step 4: Select scrambled CSV file to clean:</label>
+        <input type="file" id="csv_file" name="csv_file" accept=".csv" required>
+        <label for="output_name4">Output file name (without extension):</label>
+        <input type="text" id="output_name4" name="output_name" placeholder="e.g. my_table" required>
+        <button type="submit">Clean CSV to Gold Standard</button>
+    </form>
+
+    <form method="post" action="/convert_xls" enctype="multipart/form-data" style="margin-top:32px;">
+        <label for="csv_file_xls">Step 5: Select gold standard CSV file to convert to Excel:</label>
+        <input type="file" id="csv_file_xls" name="csv_file" accept=".csv" required>
+        <label for="output_name5">Output file name (without extension):</label>
+        <input type="text" id="output_name5" name="output_name" placeholder="e.g. my_table" required>
+        <button type="submit">Convert to Excel (XLSX)</button>
+    </form>
+
+    <!-- BATCH PROCESSING SECTION -->
+    <div class="batch-section">
+        <h3>🚀 Batch Processing (Multiple Files or Folders)</h3>
+        <p style="color:#666; margin-bottom:20px;">Process multiple files at once with <strong>sequential processing</strong> to avoid system overload. Files are processed one at a time with detailed progress tracking. <strong>📁 Supports both individual file selection and folder uploads!</strong></p>
+        
+        <form method="post" action="/batch_pdf_to_images" enctype="multipart/form-data" id="batch-pdf-form" style="margin-bottom:32px;">
+            <label for="batch_pdf_files">Batch Step 1: Convert Multiple PDFs to Images:</label>
+            
+            <div class="upload-mode-toggle">
+                <label><input type="radio" name="pdf_upload_mode" value="files" checked> Select Multiple Files</label>
+                <label><input type="radio" name="pdf_upload_mode" value="folder"> Select Folder</label>
+            </div>
+            
+            <input type="file" id="batch_pdf_files" name="pdf_files" accept="application/pdf" multiple required>
+            <div class="folder-note" id="pdf_folder_note" style="display:none;">
+                📁 Folder mode: Select a folder containing PDF files. All PDFs in the folder (and subfolders) will be processed.
+            </div>
+            
+            <label for="batch_output_name1">Output file name (without extension):</label>
+            <input type="text" id="batch_output_name1" name="output_name" placeholder="e.g. batch_reports" required>
+            <button type="submit" id="batch-pdf-button">Convert All PDFs to Images</button>
+            
+            <div class="progress-container" id="progress-container-batch1">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill-batch1"></div>
+                </div>
+                <div class="progress-text" id="progress-text-batch1">Starting batch conversion...</div>
+            </div>
+        </form>
+
+        <form method="post" action="/batch_extract_text_from_zips" enctype="multipart/form-data" id="batch-zip-form" style="margin-bottom:32px;">
+            <label for="batch_zip_files">Batch Step 2: Extract Text from Multiple ZIP Files:</label>
+            
+            <div class="upload-mode-toggle">
+                <label><input type="radio" name="zip_upload_mode" value="files" checked> Select Multiple Files</label>
+                <label><input type="radio" name="zip_upload_mode" value="folder"> Select Folder</label>
+            </div>
+            
+            <input type="file" id="batch_zip_files" name="zip_files" accept=".zip" multiple required>
+            <div class="folder-note" id="zip_folder_note" style="display:none;">
+                📁 Folder mode: Select a folder containing ZIP files. All ZIPs in the folder (and subfolders) will be processed.
+            </div>
+            
+            <label for="batch_output_name2">Output file name (without extension):</label>
+            <input type="text" id="batch_output_name2" name="output_name" placeholder="e.g. batch_text" required>
+            <button type="submit" id="batch-zip-button">Extract Text from All ZIPs</button>
+            
+            <div class="progress-container" id="progress-container-batch2">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill-batch2"></div>
+                </div>
+                <div class="progress-text" id="progress-text-batch2">Starting batch OCR...</div>
+            </div>
+        </form>
+
+        <form method="post" action="/batch_extract_text_from_images" enctype="multipart/form-data" id="batch-images-form" style="margin-bottom:32px;">
+            <label for="batch_image_files">Batch Step 3: Extract Text from Multiple Images:</label>
+            
+            <div class="upload-mode-toggle">
+                <label><input type="radio" name="images_upload_mode" value="files" checked> Select Multiple Files</label>
+                <label><input type="radio" name="images_upload_mode" value="folder"> Select Folder</label>
+            </div>
+            
+            <input type="file" id="batch_image_files" name="image_files" accept=".png,.jpg,.jpeg,.tiff,.bmp,.gif" multiple required>
+            <div class="folder-note" id="images_folder_note" style="display:none;">
+                📁 Folder mode: Select a folder containing image files. All images in the folder (and subfolders) will be processed.
+            </div>
+            
+            <label for="batch_output_name3">Output file name (without extension):</label>
+            <input type="text" id="batch_output_name3" name="output_name" placeholder="e.g. batch_images_text" required>
+            <button type="submit" id="batch-images-button">Extract Text from All Images</button>
+            
+            <div class="progress-container" id="progress-container-batch3">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill-batch3"></div>
+                </div>
+                <div class="progress-text" id="progress-text-batch3">Starting batch image OCR...</div>
+            </div>
+        </form>
+    </div>
+
+    <div style="margin-top:28px; color:#555; font-size:0.98em;">
+        <b>How it works:</b><br>
+        <b>Individual Processing:</b><br>
+        1. Step 1: Converts PDF pages to high-quality PNG images (400 DPI) for optimal OCR processing.<br>
+        2. Step 2: Extracts text using hybrid approach - tries direct extraction first, falls back to OCR if needed.<br>
+        2.5. Step 2.5: Alternative - Extract text directly from a ZIP file of page images using OCR.<br>
+        3. Step 3: Converts TXT to a scrambled CSV (one line per row, minimal parsing).<br>
+        4. Step 4: Cleans the CSV to gold standard columns and layout with account number correction.<br>
+        5. Step 5: Converts the gold standard CSV to Excel (.xlsx) for professional use.<br><br>
+        <b>Batch Processing:</b><br>
+        • <b>Batch PDF→Images:</b> Upload multiple PDF files OR select a folder containing PDFs to convert all to image sets <strong>sequentially</strong> (one at a time).<br>
+        • <b>Batch ZIP→Text:</b> Upload multiple ZIP files OR select a folder containing ZIPs to extract text from all <strong>sequentially</strong>.<br>
+        • <b>Batch Images→Text:</b> Upload multiple image files OR select a folder containing images to run OCR on all <strong>one by one</strong>.<br><br>
+        <span style="color:#0078d4;"><strong>📁 Folder Upload:</strong> Use the radio buttons to switch between "Select Multiple Files" and "Select Folder" modes. Folder mode will process ALL files of the correct type in the selected folder and subfolders.</span><br>
+        <span style="color:#c00;"><strong>⚡ Sequential Processing:</strong> Files are processed one at a time to prevent system overload. Real-time progress bars show detailed status including current file, page, and estimated time.</span>
+    </div>
+</div>
+
+<script>
+// Upload mode toggle functionality
+function setupUploadModeToggle(formId, fileInputId, folderNoteId, acceptType) {
+    const form = document.getElementById(formId);
+    const fileInput = document.getElementById(fileInputId);
+    const folderNote = document.getElementById(folderNoteId);
+    const radioButtons = form.querySelectorAll('input[type="radio"]');
+    
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value === 'folder') {
+                // Enable folder selection
+                fileInput.setAttribute('webkitdirectory', '');
+                fileInput.removeAttribute('multiple');
+                fileInput.removeAttribute('accept');
+                folderNote.style.display = 'block';
+            } else {
+                // Enable multiple file selection
+                fileInput.removeAttribute('webkitdirectory');
+                fileInput.setAttribute('multiple', '');
+                fileInput.setAttribute('accept', acceptType);
+                folderNote.style.display = 'none';
+            }
+            // Clear previous selection
+            fileInput.value = '';
+        });
+    });
+}
+
+// Initialize upload mode toggles
+document.addEventListener('DOMContentLoaded', function() {
+    setupUploadModeToggle('batch-pdf-form', 'batch_pdf_files', 'pdf_folder_note', 'application/pdf');
+    setupUploadModeToggle('batch-zip-form', 'batch_zip_files', 'zip_folder_note', '.zip');
+    setupUploadModeToggle('batch-images-form', 'batch_image_files', 'images_folder_note', '.png,.jpg,.jpeg,.tiff,.bmp,.gif');
+});
+
+let activeTaskId = null;
+let progressInterval = null;
+
+// Enhanced progress bar handler for PDF to Images with real-time updates
+document.getElementById('pdf-to-images-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const button = document.getElementById('pdf-to-images-button');
+    const progressContainer = document.getElementById('progress-container-1');
+    const progressFill = document.getElementById('progress-fill-1');
+    const progressText = document.getElementById('progress-text-1');
+    
+    // Show progress bar
+    progressContainer.style.display = 'block';
+    button.disabled = true;
+    button.textContent = 'Converting PDF...';
+    progressFill.style.width = '0%';
+    progressText.textContent = 'Starting conversion...';
+    
+    // Submit form and get task ID
+    fetch('/pdf_to_images', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.task_id) {
+            activeTaskId = data.task_id;
+            startProgressPolling(activeTaskId, progressFill, progressText, button, 'Convert PDF to Images');
+        } else {
+            throw new Error('No task ID received');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        progressText.textContent = 'Error starting conversion';
+        button.disabled = false;
+        button.textContent = 'Convert PDF to Images';
+    });
+});
+
+// Progress bar handler for Text Extraction (traditional form submission)
+document.getElementById('extract-text-form').addEventListener('submit', function(e) {
+    showProgressBar('progress-container-2', 'extract-text-button', 'Extracting Text...', [
+        'Trying direct text extraction...',
+        'Running OCR if needed...',
+        'Processing all pages...',
+        'Finalizing text output...'
+    ]);
+});
+
+// Progress bar handler for Text Extraction from Images (traditional form submission)
+document.getElementById('extract-text-from-images-form').addEventListener('submit', function(e) {
+    showProgressBar('progress-container-25', 'extract-text-from-images-button', 'Extracting Text from Images...', [
+        'Loading ZIP file...',
+        'Extracting images...',
+        'Running OCR on images...',
+        'Finalizing text output...'
+    ]);
+});
+
+// Progress bar handlers for Batch Processing with real-time updates
+document.getElementById('batch-pdf-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const button = document.getElementById('batch-pdf-button');
+    const progressContainer = document.getElementById('progress-container-batch1');
+    const progressFill = document.getElementById('progress-fill-batch1');
+    const progressText = document.getElementById('progress-text-batch1');
+    
+    // Show progress bar
+    progressContainer.style.display = 'block';
+    button.disabled = true;
+    button.textContent = 'Processing PDFs...';
+    progressFill.style.width = '0%';
+    progressText.textContent = 'Starting batch conversion...';
+    
+    // Submit form and get task ID
+    fetch('/batch_pdf_to_images', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.task_id) {
+            startProgressPolling(data.task_id, progressFill, progressText, button, 'Convert All PDFs to Images');
+        } else {
+            throw new Error('No task ID received');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        progressText.textContent = 'Error starting batch conversion';
+        button.disabled = false;
+        button.textContent = 'Convert All PDFs to Images';
+    });
+});
+
+document.getElementById('batch-zip-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const button = document.getElementById('batch-zip-button');
+    const progressContainer = document.getElementById('progress-container-batch2');
+    const progressFill = document.getElementById('progress-fill-batch2');
+    const progressText = document.getElementById('progress-text-batch2');
+    
+    // Show progress bar
+    progressContainer.style.display = 'block';
+    button.disabled = true;
+    button.textContent = 'Processing ZIPs...';
+    progressFill.style.width = '0%';
+    progressText.textContent = 'Starting batch OCR...';
+    
+    // Submit form and get task ID
+    fetch('/batch_extract_text_from_zips', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.task_id) {
+            startProgressPolling(data.task_id, progressFill, progressText, button, 'Extract Text from All ZIPs');
+        } else {
+            throw new Error('No task ID received');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        progressText.textContent = 'Error starting batch processing';
+        button.disabled = false;
+        button.textContent = 'Extract Text from All ZIPs';
+    });
+});
+
+document.getElementById('batch-images-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const button = document.getElementById('batch-images-button');
+    const progressContainer = document.getElementById('progress-container-batch3');
+    const progressFill = document.getElementById('progress-fill-batch3');
+    const progressText = document.getElementById('progress-text-batch3');
+    
+    // Show progress bar
+    progressContainer.style.display = 'block';
+    button.disabled = true;
+    button.textContent = 'Processing Images...';
+    progressFill.style.width = '0%';
+    progressText.textContent = 'Starting batch image OCR...';
+    
+    // Submit form and get task ID
+    fetch('/batch_extract_text_from_images', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.task_id) {
+            startProgressPolling(data.task_id, progressFill, progressText, button, 'Extract Text from All Images');
+        } else {
+            throw new Error('No task ID received');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        progressText.textContent = 'Error starting batch processing';
+        button.disabled = false;
+        button.textContent = 'Extract Text from All Images';
+    });
+});
+
+function startProgressPolling(taskId, progressFill, progressText, button, originalButtonText) {
+    let pollCount = 0;
+    let lastProgress = 0;
+    let stuckCount = 0;
+    let lastProgressTime = Date.now();
+    
+    progressInterval = setInterval(() => {
+        pollCount++;
+        
+        fetch(`/progress/${taskId}`)
+        .then(response => response.json())
+        .then(data => {
+            // Update progress bar
+            progressFill.style.width = Math.max(data.progress, 0) + '%';
+            
+            // Add processing animation for active progress
+            if (data.progress > 0 && data.progress < 100) {
+                progressFill.classList.add('processing');
+            } else {
+                progressFill.classList.remove('processing');
+            }
+            
+            // Enhanced progress text with emojis and detailed status
+            let displayMessage = data.message;
+            
+            // Check if progress is stuck (be more lenient for intensive operations)
+            if (data.progress === lastProgress && data.progress > 0 && data.progress < 100) {
+                stuckCount++;
+                if (stuckCount >= 15) { // 30 seconds without progress change
+                    displayMessage += " (Processing intensive operation, please wait...)";
+                }
+            } else if (data.progress > lastProgress) {
+                stuckCount = 0;
+                lastProgressTime = Date.now();
+            }
+            
+            // Add time indicator for long-running processes
+            if (pollCount > 10) { // After 20 seconds
+                const minutes = Math.floor(pollCount * 2 / 60);
+                const seconds = (pollCount * 2) % 60;
+                if (minutes > 0) {
+                    displayMessage += ` (${minutes}:${seconds.toString().padStart(2, '0')})`;
+                }
+            }
+            
+            // Show working indicator if progress hasn't changed but we're not stuck
+            if (data.progress === lastProgress && pollCount > 3 && data.progress > 0 && data.progress < 100 && stuckCount < 15) {
+                displayMessage += " ⚙️";
+            }
+            lastProgress = data.progress;
+            
+            progressText.innerHTML = displayMessage;
+            
+            // Check if complete or error
+            if (data.progress >= 100 || data.message.includes('Completed!')) {
+                clearInterval(progressInterval);
+                button.disabled = false;
+                button.textContent = originalButtonText;
+                
+                // Success state
+                progressFill.classList.remove('processing');
+                progressFill.style.backgroundColor = '#28a745'; // Green
+                progressText.style.color = '#28a745';
+                
+                // Check if there's a download link in the message
+                if (data.message.includes('File saved to Downloads:')) {
+                    const filename = data.message.split('File saved to Downloads: ')[1];
+                    progressText.innerHTML = `🎉 Completed! File saved to: <strong>E:\\Downloads\\${filename}</strong>`;
+                } else if (data.message.includes('Download:')) {
+                    const filename = data.message.split('Download: ')[1];
+                    progressText.innerHTML = `🎉 <a href="/download/${filename}" style="color: #28a745; text-decoration: none; font-weight: bold;">📥 Download ${filename}</a>`;
+                }
+            } else if (data.progress === 0 && data.message.includes('Error')) {
+                // Error state
+                clearInterval(progressInterval);
+                button.disabled = false;
+                button.textContent = originalButtonText;
+                progressFill.classList.remove('processing');
+                progressFill.style.backgroundColor = '#dc3545'; // Red
+                progressText.style.color = '#dc3545';
+            }
+            
+            // Extended timeout check for intensive operations - 5 minutes without any progress
+            if (Date.now() - lastProgressTime > 300000) { // 5 minutes without any progress
+                clearInterval(progressInterval);
+                button.disabled = false;
+                button.textContent = originalButtonText;
+                progressText.innerHTML = '⚠️ Processing took longer than expected. <a href="javascript:location.reload()" style="color: #0078d4;">Refresh page</a> and check Downloads folder.';
+                progressText.style.color = '#dc3545';
+            }
+        })
+        .catch(error => {
+            console.error('Progress polling error:', error);
+            
+            // Don't stop polling immediately on network errors
+            if (pollCount > 90) { // Stop after 3 minutes of errors
+                clearInterval(progressInterval);
+                button.disabled = false;
+                button.textContent = originalButtonText;
+                progressText.textContent = '❌ Connection lost. Please refresh and try again.';
+                progressText.style.color = '#dc3545';
+            } else if (pollCount % 5 === 0) { // Show warning every 5 failed polls
+                progressText.innerHTML = `${displayMessage || 'Processing...'} <span style="color: #f39c12;">(Connection issues...)</span>`;
+            }
+        });
+    }, 2000); // Poll every 2 seconds instead of 1 second
+}
+
+function showProgressBar(containerId, buttonId, buttonText, messages) {
+    // Show progress bar
+    document.getElementById(containerId).style.display = 'block';
+    document.getElementById(buttonId).disabled = true;
+    document.getElementById(buttonId).textContent = buttonText;
+    
+    // Animate progress (simulation for traditional forms)
+    let progress = 0;
+    const progressFill = document.querySelector(`#${containerId} .progress-fill`);
+    const progressText = document.querySelector(`#${containerId} .progress-text`);
+    let messageIndex = 0;
+    
+    const interval = setInterval(() => {
+        progress += Math.random() * 15;
+        if (progress > 90) progress = 90; // Don't go to 100% until complete
+        
+        progressFill.style.width = progress + '%';
+        
+        // Update message based on progress
+        const targetIndex = Math.floor((progress / 90) * messages.length);
+        if (targetIndex !== messageIndex && targetIndex < messages.length) {
+            messageIndex = targetIndex;
+            progressText.textContent = messages[messageIndex];
+        }
+    }, 1000);
+    
+    // Clean up interval when form submits
+    setTimeout(() => clearInterval(interval), 100);
+}
+
+// Clean up intervals when page unloads
+window.addEventListener('beforeunload', function() {
+    if (progressInterval) {
+        clearInterval(progressInterval);
+    }
+});
+</script>
+
+</body>
+</html>

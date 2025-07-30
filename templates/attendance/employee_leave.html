@@ -1,0 +1,748 @@
+{% extends "attendance/base.html" %}
+
+{% block title %}Employee Leave Management - Time Attendance{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0" style="color: white !important;">Leave Management</h1>
+                    <p class="text-muted">Apply for leave and manage your leave balance</p>
+                </div>
+                <div>
+                    <button class="btn btn-primary" onclick="showApplyLeaveModal()">
+                        <i class="fas fa-plus me-2"></i>Apply for Leave
+                    </button>
+                    <button class="btn btn-outline-light ms-2" onclick="refreshLeaveData()">
+                        <i class="fas fa-sync-alt me-2"></i>Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Container -->
+    <div id="alertContainer" class="row mb-3">
+        <div class="col-12">
+            <div id="alertContent"></div>
+        </div>
+    </div>
+
+    <!-- Leave Balance Cards -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="text-white mb-3">Your Leave Balance</h4>
+            <div id="leaveBalanceCards" class="row">
+                <!-- Leave balance cards will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Leave Applications -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Your Leave Applications</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Application ID</th>
+                                    <th>Leave Type</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Days</th>
+                                    <th>Status</th>
+                                    <th>Applied Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaveApplicationsTableBody">
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted">No leave applications found</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leave Types Information -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">South African Leave Types (BCEA)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="leaveTypesAccordion">
+                        <!-- Leave types will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Apply Leave Modal -->
+<div class="modal fade" id="applyLeaveModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Apply for Leave</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="applyLeaveForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="leaveType" class="form-label">Leave Type *</label>
+                                <select class="form-select" id="leaveType" name="leave_type" required>
+                                    <option value="">Select Leave Type...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="startDate" class="form-label">Start Date *</label>
+                                <input type="date" class="form-control" id="startDate" name="start_date" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="endDate" class="form-label">End Date *</label>
+                                <input type="date" class="form-control" id="endDate" name="end_date" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="calculatedDays" class="form-label">Working Days</label>
+                                <input type="text" class="form-control" id="calculatedDays" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">Reason *</label>
+                        <textarea class="form-control" id="reason" name="reason" rows="3" required 
+                                  placeholder="Please provide a detailed reason for your leave application"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="proofDocument" class="form-label">Proof Document</label>
+                        <input type="file" class="form-control" id="proofDocument" name="proof_document">
+                        <small class="form-text text-muted">Upload supporting documents (medical certificates, etc.)</small>
+                    </div>
+                    <div class="alert alert-info" id="leaveTypeInfo" style="display: none;">
+                        <h6>Leave Type Information</h6>
+                        <p id="leaveTypeDescription"></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit Application</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Application Details Modal -->
+<div class="modal fade" id="applicationDetailsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Application Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="applicationDetailsContent">
+                    <!-- Application details will be populated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.leave-balance-card {
+    border-left: 4px solid #007bff;
+    transition: transform 0.2s;
+}
+
+.leave-balance-card:hover {
+    transform: translateY(-2px);
+}
+
+.leave-balance-card.paid {
+    border-left-color: #28a745;
+}
+
+.leave-balance-card.unpaid {
+    border-left-color: #ffc107;
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-weight: 500;
+}
+
+.status-pending {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.status-approved {
+    background-color: #28a745;
+    color: #fff;
+}
+
+.status-rejected {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.status-cancelled {
+    background-color: #6c757d;
+    color: #fff;
+}
+
+.leave-days-available {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #28a745;
+}
+
+.leave-days-used {
+    font-size: 1.2rem;
+    color: #dc3545;
+}
+
+.leave-type-card {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.leave-type-card.paid {
+    border-left: 4px solid #28a745;
+}
+
+.leave-type-card.unpaid {
+    border-left: 4px solid #ffc107;
+}
+
+/* Alert Container Styles */
+#alertContainer {
+    position: relative;
+    z-index: 1050;
+    margin-bottom: 1rem;
+}
+
+#alertContainer .alert {
+    margin-bottom: 0;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border-left: 0.25rem solid;
+}
+
+#alertContainer .alert-success {
+    border-left-color: #198754;
+}
+
+#alertContainer .alert-danger {
+    border-left-color: #dc3545;
+}
+
+#alertContainer .alert-warning {
+    border-left-color: #ffc107;
+}
+
+#alertContainer .alert-info {
+    border-left-color: #0dcaf0;
+}
+
+/* Animation for alert appearance */
+@keyframes alertSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#alertContainer .alert {
+    animation: alertSlideIn 0.3s ease-out;
+}
+
+/* Table row highlight styles */
+.table-success {
+    background-color: #d4edda !important;
+}
+
+.table-danger {
+    background-color: #f8d7da !important;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Global variables
+let currentEmployeeId = 'EMP001'; // This would come from session/auth
+let leaveTypes = [];
+let leaveBalances = [];
+let leaveApplications = [];
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    loadLeaveTypes();
+    loadLeaveBalance();
+    loadLeaveApplications();
+    
+    // Set up event listeners
+    setupEventListeners();
+});
+
+function setupEventListeners() {
+    // Leave type change handler
+    document.getElementById('leaveType').addEventListener('change', function() {
+        const selectedType = this.value;
+        if (selectedType) {
+            showLeaveTypeInfo(selectedType);
+        } else {
+            document.getElementById('leaveTypeInfo').style.display = 'none';
+        }
+    });
+    
+    // Date change handlers
+    document.getElementById('startDate').addEventListener('change', calculateDays);
+    document.getElementById('endDate').addEventListener('change', calculateDays);
+    
+    // Form submission
+    document.getElementById('applyLeaveForm').addEventListener('submit', submitLeaveApplication);
+}
+
+async function loadLeaveTypes() {
+    try {
+        const response = await fetch('/api/leave/types');
+        const data = await response.json();
+        
+        if (data.success) {
+            leaveTypes = data.leave_types;
+            populateLeaveTypeSelect();
+            populateLeaveTypesAccordion();
+        } else {
+            showAlert('error', 'Failed to load leave types');
+        }
+    } catch (error) {
+        console.error('Error loading leave types:', error);
+        showAlert('error', 'Error loading leave types');
+    }
+}
+
+async function loadLeaveBalance() {
+    try {
+        const response = await fetch(`/api/leave/balance/${currentEmployeeId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            leaveBalances = data.balances;
+            populateLeaveBalanceCards();
+        } else {
+            showAlert('error', 'Failed to load leave balance');
+        }
+    } catch (error) {
+        console.error('Error loading leave balance:', error);
+        showAlert('error', 'Error loading leave balance');
+    }
+}
+
+async function loadLeaveApplications() {
+    try {
+        const response = await fetch(`/api/leave/applications/${currentEmployeeId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            leaveApplications = data.applications;
+            populateLeaveApplicationsTable();
+        } else {
+            showAlert('error', 'Failed to load leave applications');
+        }
+    } catch (error) {
+        console.error('Error loading leave applications:', error);
+        showAlert('error', 'Error loading leave applications');
+    }
+}
+
+function populateLeaveTypeSelect() {
+    const select = document.getElementById('leaveType');
+    select.innerHTML = '<option value="">Select Leave Type...</option>';
+    
+    leaveTypes.forEach(type => {
+        const option = document.createElement('option');
+        option.value = type.type;
+        option.textContent = type.name;
+        select.appendChild(option);
+    });
+}
+
+function populateLeaveBalanceCards() {
+    const container = document.getElementById('leaveBalanceCards');
+    container.innerHTML = '';
+    
+    leaveBalances.forEach(balance => {
+        const card = document.createElement('div');
+        card.className = 'col-xl-3 col-md-6 mb-3';
+        
+        const cardClass = balance.is_paid ? 'paid' : 'unpaid';
+        const cardColor = balance.is_paid ? 'success' : 'warning';
+        
+        card.innerHTML = `
+            <div class="card leave-balance-card ${cardClass}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="card-title">${balance.leave_name}</h6>
+                            <div class="leave-days-available">${balance.remaining_days}</div>
+                            <small class="text-muted">Days Available</small>
+                        </div>
+                        <div class="text-end">
+                            <div class="badge bg-${cardColor}">${balance.is_paid ? 'Paid' : 'Unpaid'}</div>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <div class="d-flex justify-content-between">
+                            <span>Used: <span class="leave-days-used">${balance.used_days}</span></span>
+                            <span>Total: ${balance.available_days}</span>
+                        </div>
+                        <div class="progress mt-1" style="height: 4px;">
+                            <div class="progress-bar bg-${cardColor}" role="progressbar" 
+                                 style="width: ${(balance.used_days / balance.available_days) * 100}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(card);
+    });
+}
+
+function populateLeaveApplicationsTable() {
+    const tbody = document.getElementById('leaveApplicationsTableBody');
+    
+    if (leaveApplications.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No leave applications found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    
+    leaveApplications.forEach(app => {
+        const row = document.createElement('tr');
+        
+        const statusBadge = `<span class="status-badge status-${app.status}">${app.status.toUpperCase()}</span>`;
+        
+        row.innerHTML = `
+            <td>${app.id}</td>
+            <td>${app.leave_name}</td>
+            <td>${app.start_date}</td>
+            <td>${app.end_date}</td>
+            <td>${app.days_requested}</td>
+            <td>${statusBadge}</td>
+            <td>${app.applied_date}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary" onclick="viewApplicationDetails('${app.id}')">
+                    View Details
+                </button>
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+}
+
+function populateLeaveTypesAccordion() {
+    const accordion = document.getElementById('leaveTypesAccordion');
+    accordion.innerHTML = '';
+    
+    leaveTypes.forEach((type, index) => {
+        const accordionItem = document.createElement('div');
+        accordionItem.className = 'accordion-item';
+        
+        const cardClass = type.is_paid ? 'paid' : 'unpaid';
+        const badgeClass = type.is_paid ? 'bg-success' : 'bg-warning';
+        
+        accordionItem.innerHTML = `
+            <h2 class="accordion-header" id="heading${index}">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                        data-bs-target="#collapse${index}" aria-expanded="false" 
+                        aria-controls="collapse${index}">
+                    ${type.name} 
+                    <span class="badge ${badgeClass} ms-2">${type.is_paid ? 'Paid' : 'Unpaid'}</span>
+                </button>
+            </h2>
+            <div id="collapse${index}" class="accordion-collapse collapse" 
+                 aria-labelledby="heading${index}" data-bs-parent="#leaveTypesAccordion">
+                <div class="accordion-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Description:</strong> ${type.description}</p>
+                            <p><strong>Days per cycle:</strong> ${type.max_days_per_cycle}</p>
+                            <p><strong>Cycle length:</strong> ${type.cycle_months} months</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Requires proof:</strong> ${type.requires_proof ? 'Yes' : 'No'}</p>
+                            ${type.requires_proof ? 
+                                `<p><strong>Proof required after:</strong> ${type.proof_required_after_days} days</p>` : 
+                                ''
+                            }
+                            <p><strong>Minimum employment:</strong> ${type.min_employment_months} months</p>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mt-3">
+                        <small><strong>BCEA Notes:</strong> ${type.notes}</small>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        accordion.appendChild(accordionItem);
+    });
+}
+
+function showLeaveTypeInfo(leaveType) {
+    const type = leaveTypes.find(t => t.type === leaveType);
+    if (type) {
+        document.getElementById('leaveTypeDescription').innerHTML = `
+            <strong>${type.name}</strong> - ${type.description}<br>
+            <small>Maximum: ${type.max_days_per_cycle} days per ${type.cycle_months}-month cycle</small><br>
+            <small class="text-muted">${type.notes}</small>
+        `;
+        document.getElementById('leaveTypeInfo').style.display = 'block';
+    }
+}
+
+function calculateDays() {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    
+    if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        
+        if (start <= end) {
+            const workingDays = calculateWorkingDays(start, end);
+            document.getElementById('calculatedDays').value = workingDays;
+        } else {
+            document.getElementById('calculatedDays').value = '';
+        }
+    }
+}
+
+function calculateWorkingDays(startDate, endDate) {
+    let workingDays = 0;
+    let currentDate = new Date(startDate);
+    
+    while (currentDate <= endDate) {
+        const dayOfWeek = currentDate.getDay();
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Not Sunday (0) or Saturday (6)
+            workingDays++;
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    return workingDays;
+}
+
+function showApplyLeaveModal() {
+    const modal = new bootstrap.Modal(document.getElementById('applyLeaveModal'));
+    modal.show();
+}
+
+async function submitLeaveApplication(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const data = {
+        employee_id: currentEmployeeId,
+        leave_type: formData.get('leave_type'),
+        start_date: formData.get('start_date'),
+        end_date: formData.get('end_date'),
+        reason: formData.get('reason')
+    };
+    
+    try {
+        const response = await fetch('/api/leave/apply', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('success', result.message);
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('applyLeaveModal'));
+            modal.hide();
+            
+            // Reset form
+            e.target.reset();
+            document.getElementById('calculatedDays').value = '';
+            document.getElementById('leaveTypeInfo').style.display = 'none';
+            
+            // Reload applications
+            loadLeaveApplications();
+        } else {
+            showAlert('error', result.error);
+        }
+    } catch (error) {
+        console.error('Error submitting leave application:', error);
+        showAlert('error', 'Error submitting leave application');
+    }
+}
+
+function viewApplicationDetails(applicationId) {
+    const app = leaveApplications.find(a => a.id === applicationId);
+    if (app) {
+        const content = document.getElementById('applicationDetailsContent');
+        content.innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Application ID:</strong> ${app.id}</p>
+                    <p><strong>Leave Type:</strong> ${app.leave_name}</p>
+                    <p><strong>Start Date:</strong> ${app.start_date}</p>
+                    <p><strong>End Date:</strong> ${app.end_date}</p>
+                    <p><strong>Days Requested:</strong> ${app.days_requested}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Status:</strong> <span class="status-badge status-${app.status}">${app.status.toUpperCase()}</span></p>
+                    <p><strong>Applied Date:</strong> ${app.applied_date}</p>
+                    ${app.status === 'approved' && app.approved_date ? `<p><strong>Approved Date:</strong> ${app.approved_date}</p>` : ''}
+                    ${app.status === 'approved' && app.approved_by ? `<p><strong>Approved By:</strong> ${app.approved_by}</p>` : ''}
+                    ${app.status === 'rejected' && app.approved_date ? `<p><strong>Reviewed Date:</strong> ${app.approved_date}</p>` : ''}
+                    ${app.status === 'rejected' && app.approved_by ? `<p><strong>Reviewed By:</strong> ${app.approved_by}</p>` : ''}
+                </div>
+            </div>
+            <div class="mt-3">
+                <p><strong>Reason:</strong></p>
+                <p class="text-muted">${app.reason}</p>
+            </div>
+            ${app.rejection_reason ? `
+                <div class="mt-3">
+                    <p><strong>Rejection Reason:</strong></p>
+                    <p class="text-danger">${app.rejection_reason}</p>
+                </div>
+            ` : ''}
+            ${app.comments ? `
+                <div class="mt-3">
+                    <p><strong>Comments:</strong></p>
+                    <p class="text-muted">${app.comments}</p>
+                </div>
+            ` : ''}
+        `;
+        
+        const modal = new bootstrap.Modal(document.getElementById('applicationDetailsModal'));
+        modal.show();
+    }
+}
+
+function refreshLeaveData() {
+    loadLeaveBalance();
+    loadLeaveApplications();
+    showAlert('info', 'Leave data refreshed');
+}
+
+function showAlert(type, message) {
+    const alertContainer = document.getElementById('alertContainer');
+    const alertContent = document.getElementById('alertContent');
+    
+    let alertClass = 'alert-info';
+    let icon = 'ℹ️';
+    
+    switch(type) {
+        case 'success':
+            alertClass = 'alert-success';
+            icon = '✅';
+            break;
+        case 'error':
+        case 'danger':
+            alertClass = 'alert-danger';
+            icon = '❌';
+            break;
+        case 'warning':
+            alertClass = 'alert-warning';
+            icon = '⚠️';
+            break;
+        case 'info':
+        default:
+            alertClass = 'alert-info';
+            icon = 'ℹ️';
+            break;
+    }
+    
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert ${alertClass} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        <strong>${icon}</strong> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    alertContent.innerHTML = '';
+    alertContent.appendChild(alertDiv);
+    alertContainer.style.display = 'block';
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+        if (alertContent.children.length === 0) {
+            alertContainer.style.display = 'none';
+        }
+    }, 5000);
+}
+
+/* Highlight approved and rejected leave applications */
+function highlightLeaveApplications() {
+    const rows = document.querySelectorAll('#leaveApplicationsTableBody tr');
+    rows.forEach(row => {
+        const statusCell = row.querySelector('td:nth-child(6)');
+        if (statusCell) {
+            const status = statusCell.textContent.trim().toLowerCase();
+            if (status === 'approved') {
+                row.classList.add('table-success');
+            } else if (status === 'rejected') {
+                row.classList.add('table-danger');
+            }
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', highlightLeaveApplications);
+</script>
+{% endblock %}

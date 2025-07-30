@@ -1,0 +1,1192 @@
+{% extends "attendance/base.html" %}
+
+{% block title %}Admin Leave Management - Time Attendance{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0" style="color: white !important;">Leave Management - Admin</h1>
+                    <p class="text-muted">Manage employee leave applications and balances</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline-light" onclick="refreshPendingApplications()">
+                        <i class="fas fa-sync-alt me-2"></i>Refresh
+                    </button>
+                    <button class="btn btn-info ms-2" onclick="showLeaveReports()">
+                        <i class="fas fa-chart-bar me-2"></i>Reports
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Container -->
+    <div id="alertContainer" class="row mb-3">
+        <div class="col-12">
+            <div id="alertContent"></div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white" style="cursor: pointer;" onclick="showPendingApplicationsDetails()">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75">Pending Applications</div>
+                            <div class="h2 mb-0" id="pendingApplicationsCount">0</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-white-75">Click to view details</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-success text-white" style="cursor: pointer;" onclick="showApprovedApplications()">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75">Approved Applications</div>
+                            <div class="h2 mb-0" id="approvedApplicationsCount">0</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check fa-2x"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-white-75">Click to view details</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-danger text-white" style="cursor: pointer;" onclick="showRejectedApplications()">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75">Rejected Applications</div>
+                            <div class="h2 mb-0" id="rejectedApplicationsCount">0</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-times fa-2x"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-white-75">Click to view details</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-info text-white" style="cursor: pointer;" onclick="showAllApplications()">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75">Total Applications</div>
+                            <div class="h2 mb-0" id="totalApplicationsCount">0</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-file-alt fa-2x"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-white-75">Click to view details</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Applications -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Pending Leave Applications</h5>
+                    <small class="text-muted">Review and approve/reject employee leave requests</small>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Employee ID</th>
+                                    <th>Leave Type</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Days</th>
+                                    <th>Applied Date</th>
+                                    <th>Reason</th>
+                                    <th>Proof</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pendingApplicationsTableBody">
+                                <tr>
+                                    <td colspan="9" class="text-center text-muted">No pending applications</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leave Types Configuration -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">BCEA Leave Types Configuration</h5>
+                    <small class="text-muted">South African Basic Conditions of Employment Act compliance</small>
+                </div>
+                <div class="card-body">
+                    <div id="leaveTypesConfig">
+                        <!-- Leave types configuration will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Application Review Modal -->
+<div class="modal fade" id="reviewApplicationModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Review Leave Application</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="applicationReviewContent">
+                    <!-- Application details will be populated here -->
+                </div>
+                <div class="mt-3">
+                    <label for="adminComments" class="form-label">Comments (Optional)</label>
+                    <textarea class="form-control" id="adminComments" rows="3" 
+                              placeholder="Add any comments or notes about this application"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="rejectApplication()">
+                    <i class="fas fa-times me-2"></i>Reject
+                </button>
+                <button type="button" class="btn btn-success" onclick="approveApplication()">
+                    <i class="fas fa-check me-2"></i>Approve
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Rejection Reason Modal -->
+<div class="modal fade" id="rejectionReasonModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Rejection Reason</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="rejectionReason" class="form-label">Reason for Rejection *</label>
+                    <textarea class="form-control" id="rejectionReason" rows="4" required
+                              placeholder="Please provide a detailed reason for rejecting this application"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="confirmRejectApplication()">
+                    Confirm Rejection
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leave Reports Modal -->
+<div class="modal fade" id="leaveReportsModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Leave Reports</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Leave Applications by Type</h6>
+                        <canvas id="leaveTypeChart" width="400" height="200"></canvas>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Application Status Distribution</h6>
+                        <canvas id="statusChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <h6>Recent Activity</h6>
+                    <div id="recentActivity">
+                        <!-- Recent activity will be populated here -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="exportReport()">
+                    <i class="fas fa-download me-2"></i>Export Report
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.application-card {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    transition: all 0.2s;
+}
+
+.application-card:hover {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.application-card.urgent {
+    border-left: 4px solid #dc3545;
+}
+
+.application-card.normal {
+    border-left: 4px solid #007bff;
+}
+
+.leave-type-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-weight: 500;
+}
+
+.leave-type-paid {
+    background-color: #28a745;
+    color: white;
+}
+
+.leave-type-unpaid {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-weight: 500;
+}
+
+.status-pending {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.status-approved {
+    background-color: #28a745;
+    color: #fff;
+}
+
+.status-rejected {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.employee-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.employee-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #007bff;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.875rem;
+}
+
+.proof-indicator {
+    color: #28a745;
+    font-size: 0.875rem;
+}
+
+.no-proof-indicator {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.leave-balance-summary {
+    background-color: #f8f9fa;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.balance-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.balance-item:last-child {
+    border-bottom: none;
+}
+
+.balance-days {
+    font-weight: bold;
+    color: #28a745;
+}
+
+.balance-days.low {
+    color: #ffc107;
+}
+
+.balance-days.depleted {
+    color: #dc3545;
+}
+
+/* Alert Container Styles */
+#alertContainer {
+    position: relative;
+    z-index: 1050;
+    margin-bottom: 1rem;
+}
+
+#alertContainer .alert {
+    margin-bottom: 0;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border-left: 0.25rem solid;
+}
+
+#alertContainer .alert-success {
+    border-left-color: #198754;
+}
+
+#alertContainer .alert-danger {
+    border-left-color: #dc3545;
+}
+
+#alertContainer .alert-warning {
+    border-left-color: #ffc107;
+}
+
+#alertContainer .alert-info {
+    border-left-color: #0dcaf0;
+}
+
+/* Animation for alert appearance */
+@keyframes alertSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#alertContainer .alert {
+    animation: alertSlideIn 0.3s ease-out;
+}
+
+.config-card {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.config-card.paid {
+    border-left: 4px solid #28a745;
+}
+
+.config-card.unpaid {
+    border-left: 4px solid #ffc107;
+}
+
+/* Clickable card styles */
+.card[onclick] {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card[onclick]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.card[onclick]:active {
+    transform: translateY(0);
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Global variables
+let pendingApplications = [];
+let leaveTypes = [];
+let currentApplicationId = null;
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    loadPendingApplications();
+    loadLeaveTypes();
+    updateStatistics();
+    updateApplicationCounts();
+});
+
+async function loadPendingApplications() {
+    try {
+        const response = await fetch('/api/leave/applications/pending');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+
+        if (data.applications) {
+            pendingApplications = data.applications;
+            populatePendingApplicationsTable();
+            updateStatistics();
+        } else {
+            console.error('Unexpected API response structure:', data);
+            showAlert('error', 'Failed to load pending applications');
+        }
+    } catch (error) {
+        console.error('Error loading pending applications:', error);
+        showAlert('error', 'Error loading pending applications');
+    }
+}
+
+async function loadLeaveTypes() {
+    try {
+        const response = await fetch('/api/leave/types');
+        const data = await response.json();
+        
+        if (data.success) {
+            leaveTypes = data.leave_types;
+            populateLeaveTypesConfig();
+        } else {
+            showAlert('error', 'Failed to load leave types');
+        }
+    } catch (error) {
+        console.error('Error loading leave types:', error);
+        showAlert('error', 'Error loading leave types');
+    }
+}
+
+function populatePendingApplicationsTable() {
+    const tbody = document.getElementById('pendingApplicationsTableBody');
+    
+    if (pendingApplications.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">No pending applications</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    
+    pendingApplications.forEach(app => {
+        const row = document.createElement('tr');
+        
+        const leaveTypeBadge = `<span class="leave-type-badge leave-type-${app.is_paid ? 'paid' : 'unpaid'}">
+            ${app.leave_name}
+        </span>`;
+        
+        const proofIndicator = app.proof_document ? 
+            '<i class="fas fa-paperclip proof-indicator" title="Proof document attached"></i>' :
+            (app.requires_proof ? 
+                '<i class="fas fa-exclamation-triangle text-warning" title="Proof required"></i>' :
+                '<i class="fas fa-minus no-proof-indicator" title="No proof required"></i>');
+        
+        row.innerHTML = `
+            <td>
+                <div class="employee-info">
+                    <div class="employee-avatar">${app.employee_id.slice(-2)}</div>
+                    <span>${app.employee_id}</span>
+                </div>
+            </td>
+            <td>${leaveTypeBadge}</td>
+            <td>${app.start_date}</td>
+            <td>${app.end_date}</td>
+            <td>${app.days_requested}</td>
+            <td>${app.applied_date}</td>
+            <td>
+                <span class="text-truncate" style="max-width: 150px; display: inline-block;" 
+                      title="${app.reason}">${app.reason}</span>
+            </td>
+            <td>${proofIndicator}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary" onclick="reviewApplication('${app.id}')">
+                    Review
+                </button>
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+}
+
+function populateLeaveTypesConfig() {
+    const container = document.getElementById('leaveTypesConfig');
+    container.innerHTML = '';
+    
+    leaveTypes.forEach(type => {
+        const card = document.createElement('div');
+        card.className = `config-card ${type.is_paid ? 'paid' : 'unpaid'}`;
+        
+        card.innerHTML = `
+            <div class="row">
+                <div class="col-md-8">
+                    <h6>${type.name} <span class="leave-type-badge leave-type-${type.is_paid ? 'paid' : 'unpaid'}">
+                        ${type.is_paid ? 'Paid' : 'Unpaid'}
+                    </span></h6>
+                    <p class="text-muted mb-2">${type.description}</p>
+                    <small class="text-muted">${type.notes}</small>
+                </div>
+                <div class="col-md-4">
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="text-muted">Days per cycle</small>
+                            <div class="fw-bold">${type.max_days_per_cycle}</div>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Cycle length</small>
+                            <div class="fw-bold">${type.cycle_months} months</div>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-6">
+                            <small class="text-muted">Requires proof</small>
+                            <div class="fw-bold">${type.requires_proof ? 'Yes' : 'No'}</div>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Min employment</small>
+                            <div class="fw-bold">${type.min_employment_months}m</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(card);
+    });
+}
+
+function updateStatistics() {
+    const pendingCount = pendingApplications.length;
+    const approvedTodayCount = 0; // Would be calculated from database
+    const rejectedTodayCount = 0; // Would be calculated from database
+    const totalCount = pendingCount + approvedTodayCount + rejectedTodayCount;
+
+    const pendingElement = document.getElementById('pendingApplicationsCount');
+    const approvedElement = document.getElementById('approvedTodayCount');
+    const rejectedElement = document.getElementById('rejectedTodayCount');
+    const totalElement = document.getElementById('totalApplicationsCount');
+
+    if (pendingElement) pendingElement.textContent = pendingCount;
+    if (approvedElement) approvedElement.textContent = approvedTodayCount;
+    if (rejectedElement) rejectedElement.textContent = rejectedTodayCount;
+    if (totalElement) totalElement.textContent = totalCount;
+}
+
+function updateApplicationCounts() {
+    fetch('/api/leave/applications/all')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.applications) {
+                const approvedCount = data.applications.filter(app => app.status.toLowerCase() === 'approved').length;
+                const rejectedCount = data.applications.filter(app => app.status.toLowerCase() === 'rejected').length;
+                const pendingCount = data.applications.filter(app => app.status.toLowerCase() === 'pending').length;
+
+                document.getElementById('approvedApplicationsCount').textContent = approvedCount;
+                document.getElementById('rejectedApplicationsCount').textContent = rejectedCount;
+                document.getElementById('pendingApplicationsCount').textContent = pendingCount;
+            } else {
+                console.error('Unexpected API response structure:', data);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching application counts:', error);
+        });
+}
+
+function reviewApplication(applicationId) {
+    currentApplicationId = applicationId;
+    const app = pendingApplications.find(a => a.id === applicationId);
+    
+    if (app) {
+        const content = document.getElementById('applicationReviewContent');
+        const leaveType = leaveTypes.find(t => t.type === app.leave_type);
+        
+        content.innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Application Details</h6>
+                    <div class="mb-3">
+                        <strong>Employee ID:</strong> ${app.employee_id}<br>
+                        <strong>Leave Type:</strong> ${app.leave_name}<br>
+                        <strong>Start Date:</strong> ${app.start_date}<br>
+                        <strong>End Date:</strong> ${app.end_date}<br>
+                        <strong>Days Requested:</strong> ${app.days_requested}<br>
+                        <strong>Applied Date:</strong> ${app.applied_date}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h6>Leave Type Information</h6>
+                    <div class="mb-3">
+                        <strong>Payment:</strong> ${leaveType.is_paid ? 'Paid' : 'Unpaid'}<br>
+                        <strong>Max Days:</strong> ${leaveType.max_days_per_cycle} per ${leaveType.cycle_months} months<br>
+                        <strong>Requires Proof:</strong> ${leaveType.requires_proof ? 'Yes' : 'No'}<br>
+                        ${leaveType.requires_proof ? 
+                            `<strong>Proof After:</strong> ${leaveType.proof_required_after_days} days<br>` : 
+                            ''
+                        }
+                        <strong>Min Employment:</strong> ${leaveType.min_employment_months} months
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <h6>Reason for Leave</h6>
+                    <div class="alert alert-light">
+                        ${app.reason}
+                    </div>
+                </div>
+            </div>
+            ${app.proof_document ? `
+                <div class="row">
+                    <div class="col-12">
+                        <h6>Proof Document</h6>
+                        <div class="alert alert-info">
+                            <i class="fas fa-paperclip me-2"></i>Document attached: ${app.proof_document}
+                        </div>
+                    </div>
+                </div>
+            ` : ''}
+            ${leaveType.requires_proof && !app.proof_document ? `
+                <div class="row">
+                    <div class="col-12">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Warning:</strong> This leave type requires proof documentation, but none was provided.
+                        </div>
+                    </div>
+                </div>
+            ` : ''}
+            <div class="row">
+                <div class="col-12">
+                    <h6>BCEA Compliance Notes</h6>
+                    <small class="text-muted">${leaveType.notes}</small>
+                </div>
+            </div>
+        `;
+        
+        const modal = new bootstrap.Modal(document.getElementById('reviewApplicationModal'));
+        modal.show();
+    }
+}
+
+function approveApplication() {
+    const comments = document.getElementById('adminComments').value;
+    
+    if (currentApplicationId) {
+        processApplication(currentApplicationId, 'approve', comments);
+    }
+}
+
+function rejectApplication() {
+    // Show rejection reason modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('reviewApplicationModal'));
+    modal.hide();
+    
+    setTimeout(() => {
+        const rejectionModal = new bootstrap.Modal(document.getElementById('rejectionReasonModal'));
+        rejectionModal.show();
+    }, 300);
+}
+
+function confirmRejectApplication() {
+    const rejectionReason = document.getElementById('rejectionReason').value.trim();
+    
+    if (!rejectionReason) {
+        showAlert('error', 'Please provide a reason for rejection');
+        return;
+    }
+    
+    if (currentApplicationId) {
+        processApplication(currentApplicationId, 'reject', rejectionReason);
+    }
+}
+
+async function processApplication(applicationId, action, reason) {
+    try {
+        const endpoint = action === 'approve' ? 'approve' : 'reject';
+        const payload = action === 'approve' ? 
+            { approved_by: 'admin', comments: reason } :
+            { rejected_by: 'admin', rejection_reason: reason };
+        
+        const response = await fetch(`/api/leave/applications/${applicationId}/${endpoint}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert('success', data.message);
+            
+            // Close modals
+            const reviewModal = bootstrap.Modal.getInstance(document.getElementById('reviewApplicationModal'));
+            const rejectionModal = bootstrap.Modal.getInstance(document.getElementById('rejectionReasonModal'));
+            
+            if (reviewModal) reviewModal.hide();
+            if (rejectionModal) rejectionModal.hide();
+            
+            // Clear form
+            document.getElementById('adminComments').value = '';
+            document.getElementById('rejectionReason').value = '';
+            
+            // Reload applications
+            loadPendingApplications();
+            
+        } else {
+            showAlert('error', data.error);
+        }
+    } catch (error) {
+        console.error('Error processing application:', error);
+        showAlert('error', 'Error processing application');
+    }
+}
+
+function refreshPendingApplications() {
+    loadPendingApplications();
+    showAlert('info', 'Pending applications refreshed');
+}
+
+function showLeaveReports() {
+    // This would implement reporting functionality
+    const modal = new bootstrap.Modal(document.getElementById('leaveReportsModal'));
+    modal.show();
+    
+    // Placeholder for charts
+    setTimeout(() => {
+        showAlert('info', 'Leave reports feature coming soon');
+    }, 500);
+}
+
+function exportReport() {
+    // This would implement report export functionality
+    showAlert('info', 'Report export feature coming soon');
+}
+
+function showAlert(type, message) {
+    const alertContainer = document.getElementById('alertContainer');
+    const alertContent = document.getElementById('alertContent');
+    
+    let alertClass = 'alert-info';
+    let icon = 'ℹ️';
+    
+    switch(type) {
+        case 'success':
+            alertClass = 'alert-success';
+            icon = '✅';
+            break;
+        case 'error':
+        case 'danger':
+            alertClass = 'alert-danger';
+            icon = '❌';
+            break;
+        case 'warning':
+            alertClass = 'alert-warning';
+            icon = '⚠️';
+            break;
+        case 'info':
+        default:
+            alertClass = 'alert-info';
+            icon = 'ℹ️';
+            break;
+    }
+    
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert ${alertClass} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        <strong>${icon}</strong> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    alertContent.innerHTML = '';
+    alertContent.appendChild(alertDiv);
+    alertContainer.style.display = 'block';
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+        if (alertContent.children.length === 0) {
+            alertContainer.style.display = 'none';
+        }
+    }, 5000);
+}
+
+function showRejectedApplications() {
+    // Fetch rejected applications from the backend
+    fetch('/api/leave/applications/rejected')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success && data.data) {
+                const rejectedApps = data.data;
+                
+                if (rejectedApps.length === 0) {
+                    showAlert('info', 'No rejected applications found.');
+                    return;
+                }
+                
+                // Create a detailed view of rejected applications
+                let htmlContent = '<div class="row">';
+                
+                rejectedApps.forEach(app => {
+                    htmlContent += `
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-danger">
+                                <div class="card-header bg-danger text-white">
+                                    <h6 class="mb-0">Employee: ${app.employee_id}</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Leave Type:</strong> ${app.leave_type}</p>
+                                    <p><strong>Period:</strong> ${app.start_date} to ${app.end_date}</p>
+                                    <p><strong>Reason:</strong> ${app.reason}</p>
+                                    ${app.rejection_reason ? `<p><strong>Rejection Reason:</strong> <span class="text-danger">${app.rejection_reason}</span></p>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                htmlContent += '</div>';
+                
+                // Display in alert container
+                const alertContainer = document.getElementById('alertContainer');
+                const alertContent = document.getElementById('alertContent');
+                
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-light border-danger';
+                alertDiv.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h5 class="alert-heading text-danger">
+                                <i class="fas fa-times-circle me-2"></i>Rejected Leave Applications
+                            </h5>
+                            ${htmlContent}
+                        </div>
+                        <button type="button" class="btn-close" onclick="this.parentElement.parentElement.remove()"></button>
+                    </div>
+                `;
+                
+                alertContent.innerHTML = '';
+                alertContent.appendChild(alertDiv);
+                alertContainer.style.display = 'block';
+                
+            } else {
+                showAlert('error', data.error || 'Failed to fetch rejected applications.');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching rejected applications:', error);
+            showAlert('error', 'An error occurred while fetching rejected applications.');
+        });
+}
+
+function showApprovedApplications() {
+    // Fetch all applications and filter approved ones
+    fetch('/api/leave/applications/all')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.applications) {
+                const approvedApps = data.applications.filter(app => app.status && app.status.toLowerCase() === 'approved');
+                
+                if (approvedApps.length === 0) {
+                    showAlert('info', 'No approved applications found.');
+                    return;
+                }
+                
+                // Create a detailed view of approved applications
+                let htmlContent = '<div class="row">';
+                
+                approvedApps.forEach(app => {
+                    htmlContent += `
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0">Employee: ${app.employee_id}</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Leave Type:</strong> ${app.leave_type}</p>
+                                    <p><strong>Period:</strong> ${app.start_date} to ${app.end_date}</p>
+                                    <p><strong>Reason:</strong> ${app.reason}</p>
+                                    ${app.approved_by ? `<p><strong>Approved By:</strong> <span class="text-success">${app.approved_by}</span></p>` : ''}
+                                    ${app.approved_date ? `<p><strong>Approved Date:</strong> ${app.approved_date}</p>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                htmlContent += '</div>';
+                
+                // Display in alert container
+                const alertContainer = document.getElementById('alertContainer');
+                const alertContent = document.getElementById('alertContent');
+                
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-light border-success';
+                alertDiv.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h5 class="alert-heading text-success">
+                                <i class="fas fa-check-circle me-2"></i>Approved Leave Applications
+                            </h5>
+                            ${htmlContent}
+                        </div>
+                        <button type="button" class="btn-close" onclick="this.parentElement.parentElement.remove()"></button>
+                    </div>
+                `;
+                
+                alertContent.innerHTML = '';
+                alertContent.appendChild(alertDiv);
+                alertContainer.style.display = 'block';
+                
+            } else {
+                showAlert('error', 'Failed to fetch approved applications.');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching approved applications:', error);
+            showAlert('error', 'An error occurred while fetching approved applications.');
+        });
+}
+
+function showPendingApplicationsDetails() {
+    // Use the existing pending applications data or fetch fresh data
+    if (pendingApplications.length === 0) {
+        showAlert('info', 'No pending applications found.');
+        return;
+    }
+    
+    // Create a detailed view of pending applications
+    let htmlContent = '<div class="row">';
+    
+    pendingApplications.forEach(app => {
+        htmlContent += `
+            <div class="col-md-6 mb-3">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="mb-0">Employee: ${app.employee_id}</h6>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Leave Type:</strong> ${app.leave_type}</p>
+                        <p><strong>Period:</strong> ${app.start_date} to ${app.end_date}</p>
+                        <p><strong>Days Requested:</strong> ${app.days_requested}</p>
+                        <p><strong>Reason:</strong> ${app.reason}</p>
+                        <p><strong>Applied Date:</strong> ${app.applied_date}</p>
+                        <div class="mt-2">
+                            <button class="btn btn-sm btn-success me-2" onclick="reviewApplication('${app.id}')">
+                                <i class="fas fa-eye me-1"></i>Review
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    htmlContent += '</div>';
+    
+    // Display in alert container
+    const alertContainer = document.getElementById('alertContainer');
+    const alertContent = document.getElementById('alertContent');
+    
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-light border-warning';
+    alertDiv.innerHTML = `
+        <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1">
+                <h5 class="alert-heading text-warning">
+                    <i class="fas fa-clock me-2"></i>Pending Leave Applications
+                </h5>
+                ${htmlContent}
+            </div>
+            <button type="button" class="btn-close" onclick="this.parentElement.parentElement.remove()"></button>
+        </div>
+    `;
+    
+    alertContent.innerHTML = '';
+    alertContent.appendChild(alertDiv);
+    alertContainer.style.display = 'block';
+}
+
+function showAllApplications() {
+    // Fetch all applications and show overview
+    fetch('/api/leave/applications/all')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.applications) {
+                const allApps = data.applications;
+                
+                if (allApps.length === 0) {
+                    showAlert('info', 'No applications found.');
+                    return;
+                }
+                
+                // Group applications by status
+                const pendingApps = allApps.filter(app => app.status && app.status.toLowerCase() === 'pending');
+                const approvedApps = allApps.filter(app => app.status && app.status.toLowerCase() === 'approved');
+                const rejectedApps = allApps.filter(app => app.status && app.status.toLowerCase() === 'rejected');
+                
+                // Create overview with statistics
+                let htmlContent = `
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <div class="card bg-warning text-dark">
+                                <div class="card-body text-center">
+                                    <h5>${pendingApps.length}</h5>
+                                    <small>Pending</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-success text-white">
+                                <div class="card-body text-center">
+                                    <h5>${approvedApps.length}</h5>
+                                    <small>Approved</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-danger text-white">
+                                <div class="card-body text-center">
+                                    <h5>${rejectedApps.length}</h5>
+                                    <small>Rejected</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                `;
+                
+                // Show recent applications (last 6)
+                const recentApps = allApps.slice(-6).reverse();
+                recentApps.forEach(app => {
+                    const statusClass = app.status && app.status.toLowerCase() === 'approved' ? 'border-success' : 
+                                       app.status && app.status.toLowerCase() === 'rejected' ? 'border-danger' : 'border-warning';
+                    const statusBadge = app.status && app.status.toLowerCase() === 'approved' ? 'badge bg-success' :
+                                       app.status && app.status.toLowerCase() === 'rejected' ? 'badge bg-danger' : 'badge bg-warning text-dark';
+                    
+                    htmlContent += `
+                        <div class="col-md-6 mb-3">
+                            <div class="card ${statusClass}">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6>${app.employee_id}</h6>
+                                            <p class="mb-1"><strong>Type:</strong> ${app.leave_type}</p>
+                                            <p class="mb-1"><strong>Period:</strong> ${app.start_date} to ${app.end_date}</p>
+                                            <p class="mb-0"><strong>Applied:</strong> ${app.applied_date}</p>
+                                        </div>
+                                        <span class="${statusBadge}">${app.status || 'Pending'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                htmlContent += '</div>';
+                
+                // Display in alert container
+                const alertContainer = document.getElementById('alertContainer');
+                const alertContent = document.getElementById('alertContent');
+                
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-light border-info';
+                alertDiv.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h5 class="alert-heading text-info">
+                                <i class="fas fa-file-alt me-2"></i>All Leave Applications Overview
+                            </h5>
+                            ${htmlContent}
+                        </div>
+                        <button type="button" class="btn-close" onclick="this.parentElement.parentElement.remove()"></button>
+                    </div>
+                `;
+                
+                alertContent.innerHTML = '';
+                alertContent.appendChild(alertDiv);
+                alertContainer.style.display = 'block';
+                
+            } else {
+                showAlert('error', 'Failed to fetch all applications.');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching all applications:', error);
+            showAlert('error', 'An error occurred while fetching all applications.');
+        });
+}
+</script>
+{% endblock %}

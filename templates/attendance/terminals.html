@@ -1,0 +1,576 @@
+{% extends "attendance/base.html" %}
+
+{% block title %}Terminal Management - Time Attendance{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0" style="color: white !important;">Terminal Management</h1>
+                    <p class="text-muted">Manage attendance terminals and their configurations</p>
+                </div>
+                <div>
+                    <div class="btn-group me-2">
+                        <button class="btn btn-success" onclick="discoverStaticDevices()" id="discoverStaticBtn">
+                            <i class="fas fa-network-wired me-2"></i>Discover Static IPs
+                        </button>
+                        <button class="btn btn-info" onclick="discoverDHCPDevices()" id="discoverDHCPBtn">
+                            <i class="fas fa-wifi me-2"></i>Discover DHCP
+                        </button>
+                        <button class="btn btn-secondary" onclick="refreshArpTable()" id="refreshArpBtn">
+                            <i class="fas fa-table me-2"></i>Refresh ARP Table
+                        </button>
+                        <button class="btn btn-warning" onclick="showNetworkSettings()" id="networkSettingsBtn">
+                            <i class="fas fa-cog me-2"></i>Network Settings
+                        </button>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTerminalModal">
+                            <i class="fas fa-plus me-2"></i>Add Terminal
+                        </button>
+                        <button class="btn btn-outline-light ms-2" onclick="refreshTerminals()">
+                            <i class="fas fa-sync-alt me-2"></i>Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Container -->
+    <div id="alertContainer" class="row mb-3">
+        <div class="col-12">
+            <div id="alertContent"></div>
+        </div>
+    </div>
+
+    <!-- Network Discovery Progress Bar -->
+    <div id="discoveryProgressContainer" class="row mb-3" style="display: none;">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-search me-2"></i>
+                            <span id="discoveryProgressTitle">Network Discovery in Progress</span>
+                        </h5>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="cancelDiscovery()" id="cancelDiscoveryBtn">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </button>
+                    </div>
+                    <div class="progress mb-2" style="height: 20px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             role="progressbar" 
+                             id="discoveryProgressBar" 
+                             style="width: 0%">
+                            <span id="discoveryProgressText">0%</span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                Status: <span id="discoveryStatus">Initializing...</span>
+                            </small>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <small class="text-muted">
+                                <i class="fas fa-network-wired me-1"></i>
+                                Found: <span id="discoveryFoundCount">0</span> devices
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75">Total Terminals</div>
+                            <div class="h2 mb-0" id="totalTerminals">{{ terminals|length }}</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-desktop fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75">Online Terminals</div>
+                            <div class="h2 mb-0" id="onlineTerminals">0</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75">Offline Terminals</div>
+                            <div class="h2 mb-0" id="offlineTerminals">0</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-times-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75">Face Recognition</div>
+                            <div class="h2 mb-0" id="faceRecognitionTerminals">0</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-check fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Terminals Table -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Terminals</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover" id="terminalsTable">
+                    <thead>
+                        <tr>
+                            <th>Terminal</th>
+                            <th>Location</th>
+                            <th>IP Address</th>
+                            <th>Status</th>
+                            <th>Features</th>
+                            <th>Last Activity</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="terminalsTableBody">
+                        {% if terminals %}
+                            {% for terminal in terminals %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            <i class="fas fa-desktop fa-2x text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">{{ terminal.name }}</div>
+                                            <div class="text-muted small">{{ terminal.terminal_id }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">{{ terminal.location }}</div>
+                                    <div class="text-muted small">{{ terminal.description or 'No description' }}</div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ terminal.ip_address or 'Not Set' }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary" id="status-{{ terminal.id }}">Checking...</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        {% if terminal.supports_face_recognition %}
+                                            <span class="badge bg-success" title="Face Recognition"><i class="fas fa-user-check"></i></span>
+                                        {% endif %}
+                                        {% if terminal.supports_pin %}
+                                            <span class="badge bg-info" title="PIN Support"><i class="fas fa-key"></i></span>
+                                        {% endif %}
+                                        {% if terminal.supports_password %}
+                                            <span class="badge bg-warning" title="Card/Password"><i class="fas fa-id-card"></i></span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-muted small">
+                                        {{ terminal.last_activity if terminal.last_activity else 'Never' }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary" onclick="editTerminal('{{ terminal.id }}')" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-outline-success" onclick="pingTerminal('{{ terminal.id }}')" title="Ping">
+                                            <i class="fas fa-wifi"></i>
+                                        </button>
+                                        <button class="btn btn-outline-warning" onclick="configureTerminal('{{ terminal.id }}')" title="Configure">
+                                            <i class="fas fa-cog"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger" onclick="deleteTerminal('{{ terminal.id }}')" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    <i class="fas fa-desktop fa-3x mb-3 d-block"></i>
+                                    <h5>No terminals configured</h5>
+                                    <p>Add your first terminal to get started with attendance tracking</p>
+                                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTerminalModal">
+                                        <i class="fas fa-plus me-2"></i>Add Terminal
+                                    </button>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Discovered Devices Section -->
+    <div class="card mt-4" id="discoveredDevicesCard" style="display: none;">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Discovered Network Devices</h5>
+                <div>
+                    <button class="btn btn-sm btn-outline-primary" onclick="refreshDiscoveredDevices()">
+                        <i class="fas fa-sync-alt me-1"></i>Refresh
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="hideDiscoveredDevices()">
+                        <i class="fas fa-times me-1"></i>Hide
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div id="discoveryProgress" class="mb-3" style="display: none;">
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                         role="progressbar" style="width: 0%" id="discoveryProgressBar"></div>
+                </div>
+                <div class="text-center mt-2">
+                    <span id="discoveryStatus">Scanning network...</span>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-striped table-hover" id="discoveredDevicesTable">
+                    <thead>
+                        <tr>
+                            <th>Device</th>
+                            <th>IP Address</th>
+                            <th>MAC Address</th>
+                            <th>Status</th>
+                            <th>Type</th>
+                            <th>Custom Name</th>
+                            <th>Actions</th>
+                        </tr>
+                        <tr id="arpTableHeaderRow" style="display: none;">
+                            <td colspan="7" class="text-center font-weight-bold text-primary">ARP TABLE</td>
+                        </tr>
+                    </thead>
+                    <tbody id="discoveredDevicesTableBody">
+                        <!-- Discovered devices will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ARP Table Section -->
+    <div class="row mb-4" id="arpTableSection" style="display:none;">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-table me-2"></i>ARP Table
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-bordered table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>IP Address</th>
+                                <th>MAC Address</th>
+                                <th>Status</th>
+                                <th>Type</th>
+                            </tr>
+                        </thead>
+                        <tbody id="arpTableBody">
+                            <!-- ARP devices will be rendered here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Terminal Modal -->
+<div class="modal fade" id="addTerminalModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Terminal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addTerminalForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="terminalName" class="form-label">Terminal Name *</label>
+                        <input type="text" class="form-control" id="terminalName" name="name" required>
+                        <div class="form-text">Enter a unique name for this terminal</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="terminalLocation" class="form-label">Location *</label>
+                        <input type="text" class="form-control" id="terminalLocation" name="location" required>
+                        <div class="form-text">Physical location of the terminal</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="terminalDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="terminalDescription" name="description" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="terminalIP" class="form-label">IP Address</label>
+                        <input type="text" class="form-control" id="terminalIP" name="ip_address" placeholder="192.168.1.100">
+                        <div class="form-text">IP address for remote management (optional)</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="terminalMAC" class="form-label">MAC Address</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="terminalMAC" name="mac_address" placeholder="00:11:22:33:44:55">
+                            <button class="btn btn-outline-secondary" type="button" onclick="getMacAddress()" id="getMacBtn">
+                                <i class="fas fa-search me-1"></i>Get MAC
+                            </button>
+                        </div>
+                        <div class="form-text">MAC address will be auto-filled when you click "Get MAC" (requires IP address)</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Supported Features</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="faceRecognition" name="face_recognition_enabled" checked>
+                            <label class="form-check-label" for="faceRecognition">
+                                Face Recognition
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="pinEnabled" name="pin_enabled">
+                            <label class="form-check-label" for="pinEnabled">
+                                PIN Authentication
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="cardEnabled" name="card_enabled">
+                            <label class="form-check-label" for="cardEnabled">
+                                Card/Password Authentication
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Terminal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Terminal Modal -->
+<div class="modal fade" id="editTerminalModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Terminal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editTerminalForm">
+                <input type="hidden" id="editTerminalId" name="id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="editTerminalName" class="form-label">Terminal Name *</label>
+                        <input type="text" class="form-control" id="editTerminalName" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editTerminalLocation" class="form-label">Location *</label>
+                        <input type="text" class="form-control" id="editTerminalLocation" name="location" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editTerminalDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="editTerminalDescription" name="description" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editTerminalIP" class="form-label">IP Address</label>
+                        <input type="text" class="form-control" id="editTerminalIP" name="ip_address">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editTerminalMAC" class="form-label">MAC Address</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="editTerminalMAC" name="mac_address">
+                            <button class="btn btn-outline-secondary" type="button" onclick="getMacAddressEdit()" id="getMacBtnEdit">
+                                <i class="fas fa-search me-1"></i>Get MAC
+                            </button>
+                        </div>
+                        <div class="form-text">MAC address will be auto-filled when you click "Get MAC" (requires IP address)</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Supported Features</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="editFaceRecognition" name="face_recognition_enabled">
+                            <label class="form-check-label" for="editFaceRecognition">
+                                Face Recognition
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="editPinEnabled" name="pin_enabled">
+                            <label class="form-check-label" for="editPinEnabled">
+                                PIN Authentication
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="editCardEnabled" name="card_enabled">
+                            <label class="form-check-label" for="editCardEnabled">
+                                Card/Password Authentication
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="editTerminalActive" name="is_active">
+                            <label class="form-check-label" for="editTerminalActive">
+                                Terminal Active
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Network Settings Modal -->
+<div class="modal fade" id="networkSettingsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Network Discovery Settings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="networkSettingsForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="ipRangeStart" class="form-label">IP Range Start</label>
+                        <input type="text" class="form-control" id="ipRangeStart" name="ip_range_start" 
+                               value="155.235.81.1" placeholder="192.168.1.1">
+                        <div class="form-text">Starting IP address for static IP discovery</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="ipRangeEnd" class="form-label">IP Range End</label>
+                        <input type="text" class="form-control" id="ipRangeEnd" name="ip_range_end" 
+                               value="155.235.81.254" placeholder="192.168.1.254">
+                        <div class="form-text">Ending IP address for static IP discovery</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="scanTimeout" class="form-label">Scan Timeout (seconds)</label>
+                        <input type="number" class="form-control" id="scanTimeout" name="scan_timeout" 
+                               value="5" min="1" max="30">
+                        <div class="form-text">Timeout for each device ping during discovery</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="concurrentScans" class="form-label">Concurrent Scans</label>
+                        <input type="number" class="form-control" id="concurrentScans" name="concurrent_scans" 
+                               value="10" min="1" max="50">
+                        <div class="form-text">Number of simultaneous pings (higher = faster but more resource intensive)</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="networkSettingsSaveBtn">Save Settings</button>
+                    <button type="button" class="btn btn-info d-none" id="networkSettingsCloseBtn" onclick="closeNetworkSettingsModal()">Close</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Device Naming Modal -->
+<div class="modal fade" id="deviceNamingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Name Device</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="deviceNamingForm">
+                <input type="hidden" id="deviceIpAddress" name="ip_address">
+                <input type="hidden" id="deviceMacAddress" name="mac_address">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="deviceName" class="form-label">Device Name</label>
+                        <input type="text" class="form-control" id="deviceName" name="device_name" 
+                               placeholder="Enter a custom name for this device" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="deviceDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="deviceDescription" name="device_description" 
+                                  rows="2" placeholder="Optional description"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="deviceType" class="form-label">Device Type</label>
+                        <select class="form-select" id="deviceType" name="device_type">
+                            <option value="terminal">Terminal</option>
+                            <option value="computer">Computer</option>
+                            <option value="printer">Printer</option>
+                            <option value="router">Router/Switch</option>
+                            <option value="camera">Camera</option>
+                            <option value="phone">Phone</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="alert alert-info">
+                        <strong>Device Info:</strong><br>
+                        IP: <span id="deviceInfoIP"></span><br>
+                        MAC: <span id="deviceInfoMAC"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Name</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='attendance/js/utils.js') }}"></script>
+<script src="{{ url_for('static', filename='attendance/js/terminals.js') }}"></script>
+<script src="{{ url_for('static', filename='attendance/js/network_settings.js') }}"></script>
+<script src="{{ url_for('static', filename='attendance/js/discovery.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,264 @@
+{% extends "attendance/base.html" %}
+
+{% block title %}Edit User - Time Attendance Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0"><i class="fas fa-user-edit me-2"></i>Edit User: {{ user.username }}</h1>
+                    <p class="text-muted">Modify user information and permissions</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('admin.manage_users') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Users
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Display -->
+    {% if error %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ error }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
+    <!-- Edit User Form -->
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">User Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="editUserForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="username" name="username" 
+                                       value="{{ user.username }}" required>
+                                <div class="form-text">Username must be unique and will be used for login.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ user.email or '' }}">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="full_name" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="full_name" name="full_name" 
+                                       value="{{ user.full_name or '' }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="role" class="form-label">Role <span class="text-danger">*</span></label>
+                                <select class="form-control" id="role" name="role" required>
+                                    <option value="admin" {{ 'selected' if user.role == 'admin' else '' }}>Administrator</option>
+                                    <option value="super_admin" {{ 'selected' if user.role == 'super_admin' else '' }}>Super Administrator</option>
+                                    <option value="manager" {{ 'selected' if user.role == 'manager' else '' }}>Manager</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <div class="card bg-light">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">Account Status</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <strong>Status:</strong>
+                                                {% if user.is_active %}
+                                                    <span class="badge bg-success">Active</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Inactive</span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-md-4">
+                                                <strong>Created:</strong>
+                                                <span class="text-muted">{{ user.created_at[:10] if user.created_at else 'Unknown' }}</span>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <strong>Last Login:</strong>
+                                                <span class="text-muted">{{ user.last_login[:10] if user.last_login else 'Never' }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-2">
+                                            <div class="col-12">
+                                                <div class="form-check">
+                                                    <input type="checkbox" class="form-check-input" id="is_active" name="is_active" 
+                                                           {{ 'checked' if user.is_active else '' }}>
+                                                    <label for="is_active" class="form-check-label">
+                                                        Active User
+                                                    </label>
+                                                    <div class="form-text">Inactive users cannot log in to the system.</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <div class="card bg-warning bg-opacity-10 border-warning">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">Change Password (Optional)</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="password" class="form-label">New Password</label>
+                                                <input type="password" class="form-control" id="password" name="password">
+                                                <div class="form-text">Leave blank to keep current password. Must be at least 6 characters if changing.</div>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="confirm_password" class="form-label">Confirm New Password</label>
+                                                <input type="password" class="form-control" id="confirm_password" name="confirm_password">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card bg-light mb-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">Role Permissions</h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="rolePermissions">
+                                    <!-- Will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{{ url_for('admin.manage_users') }}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Update User
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const roleSelect = document.getElementById('role');
+    const permissionsDiv = document.getElementById('rolePermissions');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    
+    // Role permissions mapping
+    const rolePermissions = {
+        'admin': [
+            'Manage employees and attendance records',
+            'View reports and analytics',
+            'Configure system settings',
+            'Manage terminals and cameras'
+        ],
+        'super_admin': [
+            'All admin permissions',
+            'Manage other admin users',
+            'Access system configuration',
+            'View audit logs',
+            'Perform system maintenance'
+        ],
+        'manager': [
+            'View employee attendance',
+            'Generate basic reports',
+            'Approve time adjustments',
+            'Limited employee management'
+        ]
+    };
+    
+    function updatePermissions() {
+        const selectedRole = roleSelect.value;
+        const permissions = rolePermissions[selectedRole] || [];
+        
+        if (permissions.length > 0) {
+            permissionsDiv.innerHTML = `
+                <ul class="list-unstyled mb-0">
+                    ${permissions.map(permission => `
+                        <li><i class="fas fa-check text-success me-2"></i>${permission}</li>
+                    `).join('')}
+                </ul>
+            `;
+        } else {
+            permissionsDiv.innerHTML = '<small class="text-muted">No specific permissions defined.</small>';
+        }
+    }
+    
+    roleSelect.addEventListener('change', updatePermissions);
+    updatePermissions(); // Initial load
+    
+    // Password confirmation validation
+    function validatePasswords() {
+        const password = passwordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
+        
+        if (password && confirmPassword && password !== confirmPassword) {
+            confirmPasswordInput.setCustomValidity('Passwords do not match');
+        } else {
+            confirmPasswordInput.setCustomValidity('');
+        }
+    }
+    
+    passwordInput.addEventListener('input', validatePasswords);
+    confirmPasswordInput.addEventListener('input', validatePasswords);
+    
+    // Form submission validation
+    document.getElementById('editUserForm').addEventListener('submit', function(e) {
+        const password = passwordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
+        
+        if (password && password !== confirmPassword) {
+            e.preventDefault();
+            showAlert('Passwords do not match', 'danger');
+            return;
+        }
+        
+        if (password && password.length < 6) {
+            e.preventDefault();
+            showAlert('Password must be at least 6 characters long', 'danger');
+            return;
+        }
+    });
+});
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container-fluid');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

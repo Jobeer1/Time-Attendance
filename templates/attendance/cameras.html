@@ -1,0 +1,1577 @@
+{% extends "attendance/base.html" %}
+
+{% block title %}Camera Management - Time Attendance{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0" style="color: white !important;">Camera Management</h1>
+                    <p class="text-muted">Monitor and configure security cameras</p>
+                </div>
+                <div>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCameraModal">
+                        <i class="fas fa-plus me-2"></i>Add Camera
+                    </button>
+                    <button class="btn btn-outline-light ms-2" onclick="refreshCameras()">
+                        <i class="fas fa-sync-alt me-2"></i>Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Container -->
+    <div id="alertContainer" class="row mb-3">
+        <div class="col-12">
+            <div id="alertContent"></div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75">Total Cameras</div>
+                            <div class="h2 mb-0" id="totalCameras">{{ cameras|length }}</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-video fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75">Online</div>
+                            <div class="h2 mb-0" id="onlineCameras">0</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75">Offline</div>
+                            <div class="h2 mb-0" id="offlineCameras">0</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75">Recording</div>
+                            <div class="h2 mb-0" id="recordingCameras">0</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-record-vinyl fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cameras Grid -->
+    <div class="row" id="camerasGrid">
+        {% if cameras %}
+            {% for camera in cameras %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card camera-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">{{ camera.name }}</h5>
+                        <span class="status-badge status-{{ camera.status or 'offline' }}">
+                            <i class="fas fa-circle me-1"></i>{{ (camera.status or 'offline').title() }}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <small class="text-muted">Location:</small>
+                            <div>{{ camera.location or 'Unknown' }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">IP Address:</small>
+                            <div>{{ camera.ip_address or 'Not configured' }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">Type:</small>
+                            <div>{{ camera.camera_type or 'Standard' }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">Zone:</small>
+                            <div>{{ camera.zone_id or 'Unassigned' }}</div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="camera-actions">
+                            <button class="btn btn-outline-primary btn-sm" onclick="editCamera('{{ camera.id }}')" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-outline-success btn-sm" onclick="testCamera('{{ camera.id }}')" title="Test">
+                                <i class="fas fa-play"></i>
+                            </button>
+                            <button class="btn btn-outline-info btn-sm" onclick="viewStream('{{ camera.id }}')" title="View Stream">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-outline-warning btn-sm" onclick="configureCamera('{{ camera.id }}')" title="Configure">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="deleteCamera('{{ camera.id }}')" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-video fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No cameras configured</h5>
+                <p class="text-muted">Add your first camera to get started with video monitoring</p>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCameraModal">
+                    <i class="fas fa-plus me-2"></i>Add Camera
+                </button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Camera Login and Auto-Detection Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Camera Login and Auto-Detection</h5>
+                </div>
+                <div class="card-body">
+                    <form id="cameraLoginForm">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="cameraLoginIP" class="form-label">Camera IP Address or URL *</label>
+                                <input type="text" class="form-control" id="cameraLoginIP" name="ip_address" placeholder="192.168.1.100 or http://192.168.1.100/webcamera.html" required>
+                                <small class="form-text text-muted">Enter IP address or full camera URL</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="cameraLoginUsername" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="cameraLoginUsername" name="username" placeholder="admin">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="cameraLoginPassword" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="cameraLoginPassword" name="password" placeholder="password">
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <button type="button" class="btn btn-primary" onclick="autoDetectStream()">
+                                <i class="fas fa-search me-2"></i>Auto-Detect Streaming Details
+                            </button>
+                        </div>
+                    </form>
+                    <div id="streamDetails" class="mt-4" style="display: none;">
+                        <h6>Detected Streaming Details:</h6>
+                        <ul>
+                            <li><strong>RTSP URL:</strong> <span id="detectedRTSP">N/A</span></li>
+                            <li><strong>HTTP URL:</strong> <span id="detectedHTTP">N/A</span></li>
+                            <li><strong>ONVIF URL:</strong> <span id="detectedONVIF">N/A</span></li>
+                        </ul>
+                        <div id="httpWarning" class="alert alert-warning mt-2" style="display: none;">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <span id="httpWarningText">HTTP stream may require Internet Explorer.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Browser Selection and Open Stream Section -->
+    <div class="row mt-3">
+        <div class="col-md-6">
+            <label for="browserSelection" class="form-label">Select Browser</label>
+            <select class="form-select" id="browserSelection">
+                <option value="ie" selected>Internet Explorer</option>
+                <option value="ie-edge">Internet Explorer (Edge IE Mode)</option>
+                <option value="chrome">Google Chrome</option>
+                <option value="firefox">Mozilla Firefox</option>
+            </select>
+        </div>
+        <div class="col-md-6 d-flex align-items-end">
+            <button class="btn btn-secondary w-100" onclick="openStreamInBrowser()">
+                <i class="fas fa-external-link-alt me-2"></i>Open Stream in Selected Browser
+            </button>
+        </div>
+    </div>
+
+    <!-- Instructions Section -->
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h6><i class="fas fa-info-circle me-2"></i>Camera Setup Instructions</h6>
+                <ol class="mb-0">
+                    <li><strong>Auto-Detect:</strong> Enter camera IP and credentials above to auto-detect stream URLs</li>
+                    <li><strong>Open Stream:</strong> Use the browser selection to open camera streams (recommended: Internet Explorer for IP cameras)</li>
+                    <li><strong>Add Live Camera:</strong> Click "Add Live Camera" to add cameras for face recognition</li>
+                    <li><strong>Start Recognition:</strong> After adding cameras, click "Start" to begin live face recognition</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Camera Modal -->
+<div class="modal fade" id="addCameraModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Camera</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addCameraForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="cameraName" class="form-label">Camera Name *</label>
+                        <input type="text" class="form-control" id="cameraName" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="cameraLocation" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="cameraLocation" name="location">
+                    </div>
+                    <div class="mb-3">
+                        <label for="cameraIP" class="form-label">IP Address</label>
+                        <input type="text" class="form-control" id="cameraIP" name="ip_address" placeholder="192.168.1.100">
+                    </div>
+                    <div class="mb-3">
+                        <label for="cameraType" class="form-label">Camera Type</label>
+                        <select class="form-select" id="cameraType" name="camera_type">
+                            <option value="standard">Standard</option>
+                            <option value="ptz">PTZ (Pan-Tilt-Zoom)</option>
+                            <option value="dome">Dome</option>
+                            <option value="bullet">Bullet</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="cameraZone" class="form-label">Zone</label>
+                        <select class="form-select" id="cameraZone" name="zone_id">
+                            <option value="">Select Zone</option>
+                            <option value="entrance_main">Main Entrance</option>
+                            <option value="exit_main">Main Exit</option>
+                            <option value="work_area_lobby">Lobby/Work Area</option>
+                            <option value="corridor">Corridor/Transition</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="cameraURL" class="form-label">Stream URL</label>
+                        <input type="url" class="form-control" id="cameraURL" name="stream_url" placeholder="rtsp://camera-ip/stream">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Camera</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Camera Modal -->
+<div class="modal fade" id="editCameraModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Camera</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editCameraForm">
+                <input type="hidden" id="editCameraId" name="id">
+                <div class="modal-body">
+                    <!-- Same fields as add form -->
+                    <div class="mb-3">
+                        <label for="editCameraName" class="form-label">Camera Name *</label>
+                        <input type="text" class="form-control" id="editCameraName" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editCameraLocation" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="editCameraLocation" name="location">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editCameraIP" class="form-label">IP Address</label>
+                        <input type="text" class="form-control" id="editCameraIP" name="ip_address">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editCameraType" class="form-label">Camera Type</label>
+                        <select class="form-select" id="editCameraType" name="camera_type">
+                            <option value="standard">Standard</option>
+                            <option value="ptz">PTZ (Pan-Tilt-Zoom)</option>
+                            <option value="dome">Dome</option>
+                            <option value="bullet">Bullet</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editCameraZone" class="form-label">Zone</label>
+                        <select class="form-select" id="editCameraZone" name="zone_id">
+                            <option value="">Select Zone</option>
+                            <option value="entrance_main">Main Entrance</option>
+                            <option value="exit_main">Main Exit</option>
+                            <option value="work_area_lobby">Lobby/Work Area</option>
+                            <option value="corridor">Corridor/Transition</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editCameraURL" class="form-label">Stream URL</label>
+                        <input type="url" class="form-control" id="editCameraURL" name="stream_url">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Live Face Recognition Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Live Face Recognition</h5>
+                <p class="mb-0 text-muted">Real-time face recognition from camera streams</p>
+            </div>
+            <div class="card-body">
+                <!-- System Status -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">System Status</h5>
+                                <p class="card-text" id="systemStatus">Loading...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">Active Cameras</h5>
+                                <p class="card-text" id="activeCameras">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">Total Cameras</h5>
+                                <p class="card-text" id="totalCameras">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">Recent Events</h5>
+                                <p class="card-text" id="recentEvents">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Control Buttons -->
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <div class="alert alert-warning" id="safeMode" style="display: none;">
+                            <i class="fas fa-shield-alt me-2"></i><strong>Emergency Mode:</strong> All refresh activities blocked to prevent infinite loops. 
+                            <button class="btn btn-sm btn-outline-warning ms-2" onclick="resetEmergencyMode()">Reset Emergency Mode</button>
+                        </div>
+                        <button class="btn btn-primary me-2" onclick="addLiveCamera()">
+                            <i class="fas fa-plus me-2"></i>Add Live Camera
+                        </button>
+                        <button class="btn btn-outline-primary me-2" onclick="testModal()">
+                            <i class="fas fa-bug me-2"></i>Test Modal
+                        </button>
+                        <button class="btn btn-success me-2" onclick="startAllCameras()">
+                            <i class="fas fa-play me-2"></i>Start All
+                        </button>
+                        <button class="btn btn-warning me-2" onclick="stopAllCameras()">
+                            <i class="fas fa-stop me-2"></i>Stop All
+                        </button>
+                        <button class="btn btn-info me-2" onclick="manualRefreshCameraStatus()">
+                            <i class="fas fa-sync-alt me-2"></i>Refresh
+                        </button>
+                        <button class="btn btn-outline-danger me-2" onclick="stopAllRefresh()">
+                            <i class="fas fa-stop me-2"></i>Stop Auto-Refresh
+                        </button>
+                        <a href="/live-camera-tracking" target="_blank" class="btn btn-secondary me-2" onclick="openFaceTracking()">
+                            <i class="fas fa-video me-2"></i>Live Face Tracking
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Camera List -->
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Camera</th>
+                                <th>Stream URL</th>
+                                <th>Zone</th>
+                                <th>Status</th>
+                                <th>Last Recognition</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="liveCameraTableBody">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">No cameras configured for live recognition</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Recent Recognition Events -->
+                <div class="mt-4">
+                    <h6>Recent Recognition Events</h6>
+                    <div id="recentEventsList" class="list-group" style="max-height: 300px; overflow-y: auto;">
+                        <div class="list-group-item text-muted text-center">No recent events</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Live Camera Modal -->
+<div class="modal fade" id="addLiveCameraModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Live Recognition Camera</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addLiveCameraForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="liveCameraId" class="form-label">Camera ID *</label>
+                        <input type="text" class="form-control" id="liveCameraId" name="camera_id" required>
+                        <small class="form-text text-muted">Unique identifier for this camera</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="liveCameraName" class="form-label">Camera Name *</label>
+                        <input type="text" class="form-control" id="liveCameraName" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="liveCameraStreamUrl" class="form-label">Stream URL *</label>
+                        <div class="input-group">
+                            <input type="url" class="form-control" id="liveCameraStreamUrl" name="stream_url" required>
+                            <button class="btn btn-outline-secondary" type="button" onclick="testStreamUrl()">Test</button>
+                        </div>
+                        <small class="form-text text-muted">
+                            Use detected stream URL from camera login above. 
+                            <a href="#" onclick="showStreamUrlHelp()">Need help with stream URLs?</a>
+                        </small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="liveCameraZone" class="form-label">Zone *</label>
+                        <select class="form-select" id="liveCameraZone" name="zone_id" required>
+                            <option value="">Select Zone...</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="recognitionInterval" class="form-label">Recognition Interval (seconds)</label>
+                        <input type="number" class="form-control" id="recognitionInterval" name="recognition_interval" 
+                               value="2.0" min="0.5" max="30" step="0.5">
+                    </div>
+                    <div class="mb-3">
+                        <label for="confidenceThreshold" class="form-label">Confidence Threshold</label>
+                        <input type="number" class="form-control" id="confidenceThreshold" name="confidence_threshold" 
+                               value="0.7" min="0.1" max="1.0" step="0.1">
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="liveCameraEnabled" name="enabled" checked>
+                            <label class="form-check-label" for="liveCameraEnabled">
+                                Enable Camera
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Camera</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.camera-card {
+    transition: transform 0.2s;
+}
+
+.camera-card:hover {
+    transform: translateY(-5px);
+}
+
+.status-badge {
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-online {
+    background-color: #198754;
+    color: white;
+}
+
+.status-offline {
+    background-color: #6c757d;
+    color: white;
+}
+
+.status-recording {
+    background-color: #dc3545;
+    color: white;
+}
+
+.camera-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.camera-actions .btn {
+    flex: 1;
+    min-width: 40px;
+}
+
+/* Alert Container Styles */
+#alertContainer {
+    position: relative;
+    z-index: 1050;
+    margin-bottom: 1rem;
+}
+
+#alertContainer .alert {
+    margin-bottom: 0;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border-left: 0.25rem solid;
+}
+
+#alertContainer .alert-success {
+    border-left-color: #198754;
+}
+
+#alertContainer .alert-danger {
+    border-left-color: #dc3545;
+}
+
+#alertContainer .alert-warning {
+    border-left-color: #ffc107;
+}
+
+#alertContainer .alert-info {
+    border-left-color: #0dcaf0;
+}
+
+/* Ensure modal doesn't interfere with alerts */
+.modal-backdrop {
+    z-index: 1040;
+}
+
+.modal {
+    z-index: 1050;
+}
+
+/* Animation for alert appearance */
+@keyframes alertSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#alertContainer .alert {
+    animation: alertSlideIn 0.3s ease-out;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Camera management functions
+function refreshCameras() {
+    window.location.reload();
+}
+
+function editCamera(cameraId) {
+    // TODO: Load camera data and show edit modal
+    console.log('Edit camera:', cameraId);
+    // For now, just show the modal
+    $('#editCameraModal').modal('show');
+}
+
+function testCamera(cameraId) {
+    // TODO: Test camera connection
+    console.log('Test camera:', cameraId);
+    alert('Camera test functionality will be implemented');
+}
+
+function viewStream(cameraId) {
+    // TODO: Open camera stream viewer
+    console.log('View stream:', cameraId);
+    alert('Stream viewer functionality will be implemented');
+}
+
+function configureCamera(cameraId) {
+    // TODO: Open camera configuration
+    console.log('Configure camera:', cameraId);
+    alert('Camera configuration functionality will be implemented');
+}
+
+function deleteCamera(cameraId) {
+    if (confirm('Are you sure you want to delete this camera?')) {
+        // TODO: Delete camera via API
+        console.log('Delete camera:', cameraId);
+        alert('Camera deletion functionality will be implemented');
+    }
+}
+
+async function autoDetectStream() {
+    const ip = $('#cameraLoginIP').val();
+    const username = $('#cameraLoginUsername').val();
+    const password = $('#cameraLoginPassword').val();
+
+    if (!ip) {
+        alert('Please enter the camera IP address.');
+        return;
+    }
+
+    console.log('Auto-detecting stream for camera:', ip);
+
+    try {
+        const response = await fetch('/admin/camera-login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                ip_address: ip, 
+                username: username, 
+                password: password 
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            alert(data.error || 'Failed to auto-detect streaming details.');
+            return;
+        }
+
+        // Update the UI with detected details
+        $('#detectedRTSP').text(data.rtsp || 'N/A');
+        $('#detectedHTTP').text(data.http || 'N/A');
+        $('#detectedONVIF').text(data.onvif || 'N/A');
+        $('#streamDetails').show();
+
+        // Show warning for browser compatibility if needed
+        if (data.http === 'N/A') {
+            $('#httpWarning').show();
+            $('#httpWarningText').text('HTTP stream may require Internet Explorer mode.');
+        } else {
+            $('#httpWarning').hide();
+        }
+
+    } catch (error) {
+        console.error('Error during auto-detection:', error);
+        alert('An error occurred while detecting streaming details. Please try again.');
+    }
+}
+
+async function openStreamInBrowser() {
+    const browser = $('#browserSelection').val();
+    const streamUrl = $('#detectedHTTP').text();
+
+    if (streamUrl === 'N/A') {
+        alert('No valid stream URL detected. Please auto-detect the stream first.');
+        return;
+    }
+
+    console.log('Open stream in browser:', browser, 'for camera:', streamUrl);
+
+    try {
+        const response = await fetch('/admin/open-stream', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ browser: browser, stream_url: streamUrl })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            alert(data.error || 'Failed to open the stream in the selected browser.');
+            return;
+        }
+
+        alert(data.message || 'Stream opened successfully.');
+    } catch (error) {
+        console.error('Error opening stream:', error);
+        alert('An unexpected error occurred while opening the stream.');
+    }
+}
+
+// Form submissions
+$('#addCameraForm').on('submit', function(e) {
+    e.preventDefault();
+    // TODO: Submit new camera data
+    console.log('Add camera form submitted');
+    alert('Add camera functionality will be implemented');
+});
+
+$('#editCameraForm').on('submit', function(e) {
+    e.preventDefault();
+    // TODO: Submit camera updates
+    console.log('Edit camera form submitted');
+    alert('Edit camera functionality will be implemented');
+});
+
+// Live camera functions
+function addLiveCamera() {
+    console.log('=== Opening Add Live Camera modal ===');
+    console.log('Function called at:', new Date().toISOString());
+    
+    // Populate stream URL from detected camera if available
+    const detectedHttpUrl = document.getElementById('detectedHTTP');
+    if (detectedHttpUrl && detectedHttpUrl.textContent !== 'N/A') {
+        console.log('Auto-filling stream URL:', detectedHttpUrl.textContent);
+        
+        // Convert web page URL to stream URL
+        const convertedStreamUrl = convertToStreamUrl(detectedHttpUrl.textContent);
+        console.log('Converted stream URL:', convertedStreamUrl);
+        
+        document.getElementById('liveCameraStreamUrl').value = convertedStreamUrl;
+        
+        // Also add a note about the conversion
+        const streamUrlField = document.getElementById('liveCameraStreamUrl');
+        streamUrlField.setAttribute('title', `Original URL: ${detectedHttpUrl.textContent}`);
+    }
+    
+    // Auto-generate camera ID if empty
+    const cameraIdField = document.getElementById('liveCameraId');
+    if (!cameraIdField.value) {
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
+        cameraIdField.value = `camera_${timestamp}`;
+        console.log('Auto-generated camera ID:', cameraIdField.value);
+    }
+    
+    // Auto-fill camera name if empty
+    const cameraNameField = document.getElementById('liveCameraName');
+    if (!cameraNameField.value) {
+        cameraNameField.value = `IP Camera ${Date.now()}`;
+        console.log('Auto-generated camera name:', cameraNameField.value);
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('addLiveCameraModal'));
+    modal.show();
+    
+    console.log('Modal opened');
+}
+
+async function startCamera(cameraId) {
+    try {
+        const response = await fetch(`/api/live-camera/cameras/${cameraId}/start`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert('success', data.message + ' - Use manual refresh to update status');
+            // Removed: debouncedRefreshCameraStatus();
+        } else {
+            showAlert('error', data.error);
+        }
+    } catch (error) {
+        console.error('Error starting camera:', error);
+        showAlert('error', 'Failed to start camera');
+    }
+}
+
+async function stopCamera(cameraId) {
+    try {
+        const response = await fetch(`/api/live-camera/cameras/${cameraId}/stop`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert('success', data.message + ' - Use manual refresh to update status');
+            // Removed: debouncedRefreshCameraStatus();
+        } else {
+            showAlert('error', data.error);
+        }
+    } catch (error) {
+        console.error('Error stopping camera:', error);
+        showAlert('error', 'Failed to stop camera');
+    }
+}
+
+async function removeCamera(cameraId) {
+    if (!confirm(`Are you sure you want to remove camera ${cameraId}?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/live-camera/cameras/${cameraId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert('success', data.message + ' - Use manual refresh to update status');
+            // Removed: debouncedRefreshCameraStatus();
+        } else {
+            showAlert('error', data.error);
+        }
+    } catch (error) {
+        console.error('Error removing camera:', error);
+        showAlert('error', 'Failed to remove camera');
+    }
+}
+
+async function startAllCameras() {
+    try {
+        const response = await fetch('/api/live-camera/start-all', {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert('success', data.message + ' - Use manual refresh to update status');
+            // Removed: debouncedRefreshCameraStatus();
+        } else {
+            showAlert('error', data.error);
+        }
+    } catch (error) {
+        console.error('Error starting all cameras:', error);
+        showAlert('error', 'Failed to start all cameras');
+    }
+}
+
+async function stopAllCameras() {
+    if (!confirm('Are you sure you want to stop all cameras?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/live-camera/stop-all', {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert('success', data.message + ' - Use manual refresh to update status');
+            // Removed: debouncedRefreshCameraStatus();
+        } else {
+            showAlert('error', data.error);
+        }
+    } catch (error) {
+        console.error('Error stopping all cameras:', error);
+        showAlert('error', 'Failed to start all cameras');
+    }
+}
+
+// Form submission for adding live camera
+document.getElementById('addLiveCameraForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    console.log('Form submitted - validating...');
+    
+    const formData = new FormData(this);
+    const data = {
+        camera_id: formData.get('camera_id'),
+        name: formData.get('name'),
+        stream_url: formData.get('stream_url'),
+        zone_id: formData.get('zone_id'),
+        enabled: formData.get('enabled') === 'on',
+        recognition_interval: parseFloat(formData.get('recognition_interval')),
+        confidence_threshold: parseFloat(formData.get('confidence_threshold'))
+    };
+    
+    console.log('Camera data to submit:', data);
+    
+    // Validate required fields
+    if (!data.camera_id || !data.name || !data.stream_url || !data.zone_id) {
+        showAlert('error', 'Please fill in all required fields (Camera ID, Name, Stream URL, Zone)');
+        return;
+    }
+    
+    try {
+        console.log('Sending POST request to /api/live-camera/cameras');
+        
+        const response = await fetch('/api/live-camera/cameras', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        console.log('Response status:', response.status);
+        
+        const result = await response.json();
+        console.log('Response data:', result);
+        console.log('Response success field:', result.success);
+        console.log('Response message field:', result.message);
+        
+        if (response.ok && result.success) {
+            console.log('Camera added successfully - showing success message');
+            
+            // Define message variable first
+            const message = result.message || 'Camera added successfully';
+            console.log('About to show alert with message:', message);
+            
+            // Close modal first
+            const modalInstance = bootstrap.Modal.getInstance(document.getElementById('addLiveCameraModal'));
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+            
+            // Reset form
+            this.reset();
+            
+            // Show success message
+            showAlert('success', message);
+            
+            // Trigger a refresh after successful addition
+            setTimeout(() => {
+                console.log('Refreshing camera status after successful addition...');
+                refreshCameraStatus();
+            }, 1000);
+            
+            console.log('Camera addition process completed successfully - Auto-refresh triggered');
+        } else {
+            console.log('Camera addition failed - showing error message');
+            showAlert('error', result.error || 'Failed to add camera');
+        }
+    } catch (error) {
+        console.error('Error adding live camera:', error);
+        showAlert('error', 'Failed to add camera: ' + error.message);
+    }
+});
+
+// Modal event handlers
+document.getElementById('addLiveCameraModal').addEventListener('hidden.bs.modal', function() {
+    console.log('Add Live Camera modal closed');
+    // Clear any form validation errors
+    const form = document.getElementById('addLiveCameraForm');
+    form.classList.remove('was-validated');
+});
+
+document.getElementById('addLiveCameraModal').addEventListener('shown.bs.modal', function() {
+    console.log('Add Live Camera modal opened');
+    // Focus on the first input
+    document.getElementById('liveCameraId').focus();
+});
+
+// Live Camera Recognition Management
+let liveCameraInterval;
+let isRefreshing = false; // Prevent concurrent refresh calls
+let refreshDebounceTimer = null; // Debounce timer for refresh calls
+let emergencyMode = false; // Emergency stop flag
+
+// Emergency function to stop all refresh activities
+function stopAllRefresh() {
+    console.log('=== EMERGENCY: Stop All Refresh Called ===');
+    console.log('Current time:', new Date().toISOString());
+    console.log('Call stack:', new Error().stack);
+    
+    // Set emergency mode
+    emergencyMode = true;
+    console.log('Emergency mode set to true');
+    
+    // Stop interval timer
+    if (liveCameraInterval) {
+        clearInterval(liveCameraInterval);
+        liveCameraInterval = null;
+        console.log('Interval timer stopped');
+    }
+    
+    // Stop debounce timer
+    if (refreshDebounceTimer) {
+        clearTimeout(refreshDebounceTimer);
+        refreshDebounceTimer = null;
+        console.log('Debounce timer stopped');
+    }
+    
+    // Reset refresh flag
+    isRefreshing = false;
+    console.log('Refresh flag reset');
+    
+    // Show safe mode indicator
+    const safeModeAlert = document.getElementById('safeMode');
+    if (safeModeAlert) {
+        safeModeAlert.style.display = 'block';
+    }
+    
+    showAlert('warning', 'EMERGENCY MODE: All automatic refresh activities have been stopped. System is now in safe mode.');
+}
+
+// Function to reset emergency mode
+function resetEmergencyMode() {
+    console.log('=== RESETTING EMERGENCY MODE ===');
+    emergencyMode = false;
+    isRefreshing = false;
+    
+    // Hide safe mode indicator
+    const safeModeAlert = document.getElementById('safeMode');
+    if (safeModeAlert) {
+        safeModeAlert.style.display = 'none';
+    }
+    
+    showAlert('info', 'Emergency mode disabled. Manual refresh is now available.');
+}
+
+// Safe manual refresh function
+async function manualRefreshCameraStatus() {
+    console.log('=== Manual Refresh Triggered ===');
+    
+    if (emergencyMode) {
+        console.log('Emergency mode active - refresh blocked');
+        showAlert('warning', 'System is in emergency mode. Refresh blocked to prevent infinite loops.');
+        return;
+    }
+    
+    if (isRefreshing) {
+        console.log('Already refreshing, ignoring manual request');
+        showAlert('warning', 'Refresh already in progress, please wait');
+        return;
+    }
+    
+    try {
+        await refreshCameraStatus();
+        showAlert('success', 'Camera status refreshed successfully');
+    } catch (error) {
+        console.error('Manual refresh failed:', error);
+        showAlert('error', 'Failed to refresh camera status');
+    }
+}
+
+// Debounced refresh function
+function debouncedRefreshCameraStatus() {
+    console.log('=== Debounced Refresh Called ===');
+    
+    if (emergencyMode) {
+        console.log('Emergency mode active - debounced refresh blocked');
+        return;
+    }
+    
+    if (refreshDebounceTimer) {
+        clearTimeout(refreshDebounceTimer);
+    }
+    
+    refreshDebounceTimer = setTimeout(async () => {
+        console.log('Debounce timer expired, executing refresh');
+        if (!isRefreshing && !emergencyMode) {
+            await refreshCameraStatus();
+        } else {
+            console.log('Refresh blocked - isRefreshing:', isRefreshing, 'emergencyMode:', emergencyMode);
+        }
+    }, 1000); // Increased from 500ms to 1000ms
+}
+
+async function initializeLiveCameraSystem() {
+    console.log('=== Initializing Live Camera System ===');
+    
+    // Load zones for camera assignment
+    await loadZones();
+    
+    // Load initial camera status in normal mode
+    console.log('Loading initial camera status...');
+    await refreshCameraStatus();
+    
+    // Clear any existing intervals to prevent conflicts
+    if (liveCameraInterval) {
+        clearInterval(liveCameraInterval);
+        liveCameraInterval = null;
+        console.log('Cleared existing interval timer');
+    }
+    
+    console.log('Live camera system initialized successfully');
+}
+
+async function loadZones() {
+    console.log('=== Loading Zones ===');
+    try {
+        const response = await fetch('/api/live-camera/zones');
+        const data = await response.json();
+        
+        if (data.success) {
+            const zoneSelect = document.getElementById('liveCameraZone');
+            if (zoneSelect) {
+                zoneSelect.innerHTML = '<option value="">Select Zone...</option>';
+                
+                data.zones.forEach(zone => {
+                    const option = document.createElement('option');
+                    option.value = zone.zone_id;
+                    option.textContent = zone.name;
+                    zoneSelect.appendChild(option);
+                });
+                
+                console.log(`Loaded ${data.zones.length} zones successfully`);
+            } else {
+                console.warn('Zone select element not found');
+            }
+        } else {
+            console.error('Failed to load zones:', data.error);
+        }
+    } catch (error) {
+        console.error('Error loading zones:', error);
+        // Don't show alert for zone loading errors to avoid interference
+    }
+}
+
+async function refreshCameraStatus() {
+    const startTime = Date.now();
+    console.log('=== Refreshing Camera Status ===', new Date().toISOString());
+    
+    // Check emergency mode first
+    if (emergencyMode) {
+        console.log('EMERGENCY MODE ACTIVE - Refresh blocked');
+        console.log('Emergency mode status:', emergencyMode);
+        console.log('Time when blocked:', new Date().toISOString());
+        return;
+    }
+    
+    // Prevent concurrent refresh calls
+    if (isRefreshing) {
+        console.log('Refresh already in progress, skipping... (called at', new Date().toISOString(), ')');
+        return;
+    }
+    
+    isRefreshing = true;
+    console.log('Setting isRefreshing to true');
+    
+    try {
+        console.log('Fetching camera status...');
+        const response = await fetch('/api/live-camera/status');
+        console.log('Status API response:', response.status, 'at', new Date().toISOString());
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('Status API data received, success:', data.success);
+        
+        if (data.success) {
+            console.log('Updating status dashboard...');
+            updateStatusDashboard(data.status);
+            
+            console.log('Updating camera table...');
+            updateCameraTable(data.cameras);
+            
+            console.log('Loading recent events...');
+            await loadRecentEvents();
+            
+            const endTime = Date.now();
+            console.log(`Camera status refresh completed in ${endTime - startTime}ms`);
+        } else {
+            console.error('Camera status refresh failed:', data.error);
+            throw new Error(data.error || 'Unknown API error');
+        }
+    } catch (error) {
+        console.error('Error refreshing camera status:', error);
+        console.error('Error details:', error.message, error.stack);
+        
+        // Show error to user
+        showAlert('error', `Failed to refresh camera status: ${error.message}`);
+    } finally {
+        isRefreshing = false;
+        console.log('Setting isRefreshing to false at', new Date().toISOString());
+    }
+}
+
+function updateStatusDashboard(status) {
+    document.getElementById('systemStatus').textContent = 
+        status.face_recognition_enabled ? 'Online' : 'Offline';
+    document.getElementById('activeCameras').textContent = status.active_cameras;
+    document.getElementById('totalCameras').textContent = status.total_cameras;
+}
+
+function updateCameraTable(cameras) {
+    console.log('=== Updating Camera Table ===');
+    console.log('Cameras received:', cameras);
+    console.log('Number of cameras:', Object.keys(cameras).length);
+    
+    const tbody = document.getElementById('liveCameraTableBody');
+    
+    if (!tbody) {
+        console.error('Camera table body not found!');
+        return;
+    }
+    
+    if (Object.keys(cameras).length === 0) {
+        console.log('No cameras to display');
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No cameras configured for live recognition</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    console.log('Camera table cleared, adding cameras...');
+    
+    Object.entries(cameras).forEach(([cameraId, camera]) => {
+        console.log(`Adding camera ${cameraId}:`, camera);
+        
+        const row = document.createElement('tr');
+        
+        const statusBadge = camera.running ? 
+            '<span class="badge bg-success">Running</span>' : 
+            (camera.enabled ? '<span class="badge bg-warning">Stopped</span>' : '<span class="badge bg-secondary">Disabled</span>');
+        
+        const lastRecognition = camera.last_recognition && camera.last_recognition.timestamp ? 
+            new Date(camera.last_recognition.timestamp * 1000).toLocaleString() : 'None';
+        
+        row.innerHTML = `
+            <td>
+                <strong>${camera.name}</strong><br>
+                <small class="text-muted">${cameraId}</small>
+            </td>
+            <td>
+                <small>${camera.stream_url}</small>
+            </td>
+            <td>${camera.zone_id}</td>
+            <td>${statusBadge}</td>
+            <td><small>${lastRecognition}</small></td>
+            <td>
+                ${camera.running ? 
+                    `<button class="btn btn-sm btn-warning" onclick="stopCamera('${cameraId}')">Stop</button>` :
+                    `<button class="btn btn-sm btn-success" onclick="startCamera('${cameraId}')">Start</button>`
+                }
+                <button class="btn btn-sm btn-danger ms-1" onclick="removeCamera('${cameraId}')">Remove</button>
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+        console.log(`Camera ${cameraId} added to table`);
+    });
+    
+    console.log('Camera table update completed');
+}
+
+async function loadRecentEvents() {
+    try {
+        const response = await fetch('/api/live-camera/events/recent');
+        const data = await response.json();
+        
+        if (data.success) {
+            const eventsList = document.getElementById('recentEventsList');
+            
+            if (data.events.length === 0) {
+                eventsList.innerHTML = '<div class="list-group-item text-muted text-center">No recent events</div>';
+                document.getElementById('recentEvents').textContent = '0';
+                return;
+            }
+            
+            document.getElementById('recentEvents').textContent = data.events.length;
+            
+            eventsList.innerHTML = '';
+            data.events.slice(0, 10).forEach(event => {
+                const eventItem = document.createElement('div');
+                eventItem.className = 'list-group-item';
+                eventItem.innerHTML = `
+                    <div class="d-flex justify-content-between">
+                        <span><strong>${event.employee_id}</strong> detected on ${event.camera_id}</span>
+                        <small>${new Date(event.timestamp * 1000).toLocaleTimeString()}</small>
+                    </div>
+                    <small class="text-muted">Confidence: ${(event.confidence * 100).toFixed(1)}%</small>
+                `;
+                eventsList.appendChild(eventItem);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading recent events:', error);
+    }
+}
+
+// Stream URL converter for IP cameras
+function convertToStreamUrl(webUrl) {
+    console.log('Converting web URL to stream URL:', webUrl);
+    
+    try {
+        const url = new URL(webUrl);
+        const baseUrl = `${url.protocol}//${url.hostname}`;
+        
+        // Common IP camera stream URL patterns
+        const streamUrls = [
+            `${baseUrl}/video.cgi`,
+            `${baseUrl}/video.mjpg`,
+            `${baseUrl}/mjpeg.cgi`,
+            `${baseUrl}/videostream.cgi`,
+            `${baseUrl}/axis-cgi/mjpg/video.cgi`,
+            `${baseUrl}/cgi-bin/video.cgi`,
+            `${baseUrl}/cgi-bin/mjpg/video.cgi`,
+            `${baseUrl}/webcam.mjpg`,
+            `${baseUrl}/mjpg/video.mjpg`,
+            `${baseUrl}/video1.mjpg`,
+            `${baseUrl}/snap.cgi`,
+            `${baseUrl}/image.cgi`,
+            `rtsp://${url.hostname}/stream`,
+            `rtsp://${url.hostname}/live`,
+            `rtsp://${url.hostname}/cam/realmonitor?channel=1&subtype=0`,
+            `rtsp://${url.hostname}:554/stream`,
+            `rtsp://${url.hostname}:554/live.sdp`
+        ];
+        
+        console.log('Generated possible stream URLs:', streamUrls);
+        return streamUrls[0]; // Return the first one for now
+        
+    } catch (error) {
+        console.error('Error converting URL:', error);
+        return webUrl; // Return original URL if conversion fails
+    }
+}
+
+// Initialize live camera system when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('=== Page Loaded - Initializing System ===');
+    
+    // Force emergency mode to false for normal operation
+    emergencyMode = false;
+    console.log('Emergency mode FORCED to false - normal operation mode');
+    
+    // Hide emergency mode indicator
+    const safeModeAlert = document.getElementById('safeMode');
+    if (safeModeAlert) {
+        safeModeAlert.style.display = 'none';
+    }
+    
+    // Initialize system normally with emergency mode check
+    setTimeout(() => {
+        console.log('Starting system initialization...');
+        console.log('Emergency mode check before init:', emergencyMode);
+        emergencyMode = false; // Force it again just before init
+        initializeLiveCameraSystem();
+    }, 500);
+    
+    // Add keyboard shortcut to emergency stop (Ctrl+Alt+S)
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.altKey && e.key === 's') {
+            e.preventDefault();
+            stopAllRefresh();
+            showAlert('warning', 'Emergency stop activated via keyboard shortcut');
+        }
+    });
+});
+
+function openFaceTracking() {
+    // Get the detected camera URL if available
+    const detectedHttpUrl = document.getElementById('detectedHTTP');
+    let url = '/live-camera-tracking';
+    
+    if (detectedHttpUrl && detectedHttpUrl.textContent !== 'N/A') {
+        url += '?camera_url=' + encodeURIComponent(detectedHttpUrl.textContent);
+    }
+    
+    window.open(url, '_blank');
+    showAlert('success', 'Face tracking interface opened in new tab');
+}
+
+function showAlert(type, message) {
+    console.log('showAlert called with type:', type, 'message:', message);
+    
+    // Enhanced alert implementation with more types
+    let alertClass = 'alert-info'; // default
+    switch(type) {
+        case 'success':
+            alertClass = 'alert-success';
+            break;
+        case 'error':
+        case 'danger':
+            alertClass = 'alert-danger';
+            break;
+        case 'warning':
+            alertClass = 'alert-warning';
+            break;
+        case 'info':
+        default:
+            alertClass = 'alert-info';
+            break;
+    }
+    
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert ${alertClass} alert-dismissible fade show`;
+    alertDiv.style.cssText = 'margin-bottom: 0; position: relative; z-index: 1050;'; // High z-index to ensure visibility
+    alertDiv.innerHTML = `
+        <strong>${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</strong> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    // Insert into alert container
+    const alertContainer = document.getElementById('alertContainer');
+    const alertContent = document.getElementById('alertContent');
+    
+    if (alertContainer && alertContent) {
+        // Clear previous alerts
+        alertContent.innerHTML = '';
+        alertContent.appendChild(alertDiv);
+        
+        // Ensure container is visible
+        alertContainer.style.display = 'block';
+        alertContainer.style.position = 'relative';
+        alertContainer.style.zIndex = '1050';
+        
+        // Scroll to the alert with a slight delay to ensure it's rendered
+        setTimeout(() => {
+            alertContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+        
+        console.log('Alert added to container and should be visible');
+    } else {
+        console.warn('Alert container not found, using fallback method');
+        // Fallback: add alert to top of page
+        const container = document.querySelector('.container-fluid');
+        if (container) {
+            container.insertBefore(alertDiv, container.firstChild);
+        } else {
+            // Last resort: show as browser alert
+            alert(`${type.toUpperCase()}: ${message}`);
+        }
+    }
+    
+    // Auto-dismiss after 8 seconds (increased from 5)
+    setTimeout(() => {
+        if (alertDiv && alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+        if (alertContainer && alertContent && alertContent.children.length === 0) {
+            alertContainer.style.display = 'none';
+        }
+    }, 8000);
+}
+
+function openFaceTracking() {
+    // Get the detected HTTP URL if available
+    const detectedHttpUrl = document.getElementById('detectedHTTP');
+    let trackingUrl = '/live-camera-tracking';
+    
+    if (detectedHttpUrl && detectedHttpUrl.textContent !== 'N/A') {
+        // Pass the camera URL as a parameter
+        trackingUrl += `?camera_url=${encodeURIComponent(detectedHttpUrl.textContent)}`;
+    }
+    
+    // Open in new window/tab
+    window.open(trackingUrl, '_blank');
+    showAlert('success', 'Face tracking interface opened in new tab');
+}
+
+function testModal() {
+    console.log('=== Testing Alert and Modal System ===');
+    
+    // Test 1: Show immediate alert
+    showAlert('info', '🧪 Testing alert system - this should be visible immediately');
+    
+    console.log('Test alert shown, waiting 2 seconds...');
+    
+    // Test 2: Show success alert after delay
+    setTimeout(() => {
+        showAlert('success', '✅ Success alert test - this should show as green');
+    }, 2000);
+    
+    // Test 3: Show error alert after delay
+    setTimeout(() => {
+        showAlert('error', '❌ Error alert test - this should show as red');
+    }, 4000);
+    
+    // Test 4: Open modal after alerts
+    setTimeout(() => {
+        console.log('Opening modal for testing...');
+        addLiveCamera();
+    }, 6000);
+}
+
+async function testStreamUrl() {
+    const streamUrl = document.getElementById('liveCameraStreamUrl').value;
+    
+    if (!streamUrl) {
+        showAlert('warning', 'Please enter a stream URL first');
+        return;
+    }
+    
+    console.log('Testing stream URL:', streamUrl);
+    showAlert('info', 'Testing stream URL... Please wait.');
+    
+    try {
+        const response = await fetch('/api/live-camera/test-stream', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ stream_url: streamUrl })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            if (result.accessible) {
+                showAlert('success', 'Stream URL is accessible and ready to use!');
+            } else {
+                showAlert('warning', 'Stream URL is not accessible. Please check the URL and camera settings.');
+            }
+        } else {
+            showAlert('error', `Stream test failed: ${result.error}`);
+        }
+    } catch (error) {
+        console.error('Error testing stream:', error);
+        showAlert('error', 'Failed to test stream URL. Please try again.');
+    }
+}
+
+function showStreamUrlHelp() {
+    const helpText = `
+        <strong>Common IP Camera Stream URL Formats:</strong><br>
+        • MJPEG: http://IP_ADDRESS/video.mjpg<br>
+        • RTSP: rtsp://IP_ADDRESS/stream<br>
+        • CGI: http://IP_ADDRESS/cgi-bin/video.cgi<br>
+        • Axis: http://IP_ADDRESS/axis-cgi/mjpg/video.cgi<br>
+        <br>
+        <strong>Tips:</strong><br>
+        • Replace IP_ADDRESS with your camera's actual IP<br>
+        • Some cameras require authentication in the URL<br>
+        • Use the "Test" button to verify connectivity<br>
+        • Check your camera's manual for exact URL format
+    `;
+    
+    showAlert('info', helpText);
+}
+</script>
+{% endblock %}

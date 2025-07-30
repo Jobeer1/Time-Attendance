@@ -1,0 +1,47 @@
+{% extends "attendance/base.html" %}
+
+{% block title %}Reports - Time Attendance{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">Reports</h2>
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        This is the reports page. You can generate and view attendance, shift, and activity reports here.
+    </div>
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Generate Report</h5>
+            <form>
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label for="reportType" class="form-label">Report Type</label>
+                        <select class="form-select" id="reportType" name="report_type">
+                            <option value="attendance">Attendance</option>
+                            <option value="shifts">Shifts</option>
+                            <option value="activity">Activity Log</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="startDate" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="startDate" name="start_date">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="endDate" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="endDate" name="end_date">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Generate</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Report Results</h5>
+            <div class="text-muted">No report generated yet.</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+[
+  {
+    "id": "46a5f257-125f-4034-b83d-78f36884522e",
+    "created_at": "2025-06-13T15:30:00.000Z",
+    "updated_at": "2025-06-15T12:50:00.000Z",
+    "name": "💻 Webcam Demo Camera",
+    "location": "Test Location - Laptop",
+    "url": "webcam://0",
+    "username": "",
+    "password": "",
+    "description": "Demo camera using laptop webcam for human detection testing",
+    "is_active": true,
+    "camera_type": "webcam",
+    "supports_ptz": false,
+    "resolution": "1280x720",
+    "fps": 30
+  },
+  {
+    "id": "demo-video-001",
+    "created_at": "2025-06-13T15:30:00.000Z",
+    "updated_at": "2025-06-13T15:30:00.000Z",
+    "name": "🎬 Demo Video Stream",
+    "location": "Test Location - Sample Video",
+    "url": "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
+    "username": "",
+    "password": "",
+    "description": "Demo camera using sample video for human detection testing",
+    "is_active": true,
+    "camera_type": "ip_camera",
+    "supports_ptz": false,
+    "resolution": "1280x720",
+    "fps": 25
+  },
+  {
+    "id": "bigbuck-demo-001",
+    "created_at": "2025-06-13T15:30:00.000Z",
+    "updated_at": "2025-06-13T15:30:00.000Z",
+    "name": "📹 BigBuckBunny Demo",
+    "location": "Test Location - Blender Foundation",
+    "url": "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+    "username": "",
+    "password": "",
+    "description": "Demo camera using BigBuckBunny video for human detection testing",
+    "is_active": true,
+    "camera_type": "ip_camera",
+    "supports_ptz": false,
+    "resolution": "1920x1080",
+    "fps": 24
+  }
+]

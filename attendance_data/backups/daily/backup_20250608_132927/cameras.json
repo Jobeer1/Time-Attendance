@@ -1,0 +1,29 @@
+[
+  {
+    "id": "46a5f257-125f-4034-b83d-78f36884522e",
+    "created_at": "2025-06-06T08:46:02.298902",
+    "updated_at": "2025-06-06T12:55:24.233501",
+    "name": "Johann Office",
+    "location": "office",
+    "description": "",
+    "url": "http://155.235.81.154/",
+    "camera_type": "ip_camera",
+    "resolution": "640x480",
+    "fps": 30,
+    "ip_address": "",
+    "port": 80,
+    "username": "",
+    "password": "",
+    "is_active": true,
+    "is_online": false,
+    "last_tested": "",
+    "test_status": "untested",
+    "allowed_terminals": [],
+    "requires_authentication": false,
+    "stream_quality": "medium",
+    "enable_recording": false,
+    "recording_path": "",
+    "maintenance_schedule": [],
+    "notes": ""
+  }
+]

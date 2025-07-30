@@ -1,0 +1,92 @@
+{% extends "attendance/base.html" %}
+
+{% block title %}{{ shift.name }} - Shift Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">
+            <i class="fas fa-clock"></i>
+            {{ shift.name }}
+        </h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <a href="{{ url_for('shift_management.shifts') }}" class="btn btn-secondary me-2">
+                <i class="fas fa-arrow-left"></i>
+                Back to Shifts
+            </a>
+            <button type="button" class="btn btn-warning" onclick="editShift('{{ shift.id }}')">
+                <i class="fas fa-edit"></i>
+                Edit Shift
+            </button>
+        </div>
+    </div>
+
+    <!-- Shift Details -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Shift Information</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Shift Name:</strong> {{ shift.name }}</p>
+                            <p><strong>Type:</strong> 
+                                <span class="badge badge-{{ 'primary' if shift.shift_type == 'day' else 'dark' }}">
+                                    {{ shift.shift_type|title }}
+                                </span>
+                            </p>
+                            <p><strong>Start Time:</strong> {{ shift.start_time }}</p>
+                            <p><strong>End Time:</strong> {{ shift.end_time }}</p>
+                            <p><strong>Duration:</strong> {{ shift.duration_hours }} hours</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Status:</strong> 
+                                <span class="badge badge-{{ 'success' if shift.is_active else 'secondary' }}">
+                                    {{ 'Active' if shift.is_active else 'Inactive' }}
+                                </span>
+                            </p>
+                            <p><strong>Break Duration:</strong> {{ shift.break_duration }} minutes</p>
+                            <p><strong>Max Overtime:</strong> {{ shift.max_overtime_hours }} hours</p>
+                            <p><strong>Working Days:</strong> 
+                                {% for day in shift.working_days %}
+                                    <span class="badge badge-info">{{ day|title }}</span>
+                                {% endfor %}
+                            </p>
+                        </div>
+                    </div>
+                    {% if shift.description %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <p><strong>Description:</strong></p>
+                            <p class="text-muted">{{ shift.description }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Assigned Employees</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Employee assignment feature coming soon...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function editShift(shiftId) {
+    window.location.href = '/admin/shifts';
+}
+</script>
+{% endblock %}

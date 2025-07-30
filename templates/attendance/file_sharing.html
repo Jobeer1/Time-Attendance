@@ -1,0 +1,784 @@
+{% extends "attendance/base.html" %}
+
+{% block title %}Medical File Sharing - Time Attendance{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0" style="color: white !important;">Medical File Sharing</h1>
+                    <p class="text-muted">Upload and share large DICOM images, CT scans, MRIs</p>
+                </div>
+                <div>
+                    <button class="btn btn-primary" onclick="showUploadModal()">
+                        <i class="fas fa-upload me-2"></i>Upload File
+                    </button>
+                    <button class="btn btn-outline-light ms-2" onclick="refreshFiles()">
+                        <i class="fas fa-sync-alt me-2"></i>Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Container -->
+    <div id="alertContainer" class="row mb-3">
+        <div class="col-12">
+            <div id="alertContent"></div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75">My Files</div>
+                            <div class="h2 mb-0" id="myFilesCount">0</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-file-medical fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75">Shared with Me</div>
+                            <div class="h2 mb-0" id="sharedFilesCount">0</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-share-alt fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75">Total Storage</div>
+                            <div class="h2 mb-0" id="totalStorage">0 MB</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-hdd fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-75">Total Downloads</div>
+                            <div class="h2 mb-0" id="totalDownloads">0</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-download fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- File Tabs -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" id="fileTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="my-files-tab" data-bs-toggle="tab" data-bs-target="#my-files" type="button" role="tab">
+                                <i class="fas fa-folder me-2"></i>My Files
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="shared-files-tab" data-bs-toggle="tab" data-bs-target="#shared-files" type="button" role="tab">
+                                <i class="fas fa-share-alt me-2"></i>Shared with Me
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="fileTabsContent">
+                        <!-- My Files Tab -->
+                        <div class="tab-pane fade show active" id="my-files" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>File Name</th>
+                                            <th>Type</th>
+                                            <th>Category</th>
+                                            <th>Size</th>
+                                            <th>Upload Date</th>
+                                            <th>Downloads</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="myFilesTable">
+                                        <tr>
+                                            <td colspan="7" class="text-center py-4">
+                                                <div class="spinner-border text-primary" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                <p class="mt-2 text-muted">Loading your files...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Shared Files Tab -->
+                        <div class="tab-pane fade" id="shared-files" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>File Name</th>
+                                            <th>Type</th>
+                                            <th>Category</th>
+                                            <th>Size</th>
+                                            <th>Shared By</th>
+                                            <th>Expires</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="sharedFilesTable">
+                                        <tr>
+                                            <td colspan="7" class="text-center py-4">
+                                                <div class="spinner-border text-primary" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                <p class="mt-2 text-muted">Loading shared files...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload File Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-upload me-2"></i>Upload Medical File
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="fileInput" class="form-label">Select File</label>
+                        <input type="file" class="form-control" id="fileInput" name="file" required>
+                        <div class="form-text">
+                            Supported formats: Medical files (DICOM, NIFTI), Images (PNG, JPEG, TIFF), Documents (PDF, DOC, XLS), Code files (HTML, CSS, JS, PY), Archives (ZIP, RAR), and more<br>
+                            Maximum file size: 500MB per file, 5GB per folder
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="fileCategory" class="form-label">File Category</label>
+                        <select class="form-select" id="fileCategory" name="file_category" required>
+                            <option value="">Select category...</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="patientId" class="form-label">Patient ID (Optional)</label>
+                        <input type="text" class="form-control" id="patientId" name="patient_id" placeholder="e.g., PT001234">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="studyDescription" class="form-label">Study Description (Optional)</label>
+                        <input type="text" class="form-control" id="studyDescription" name="study_description" 
+                               placeholder="e.g., Chest CT with contrast">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="accessLevel" class="form-label">Access Level</label>
+                        <select class="form-select" id="accessLevel" name="access_level">
+                            <option value="restricted">Restricted (Default)</option>
+                            <option value="internal">Internal</option>
+                            <option value="confidential">Confidential</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="compressLarge" name="compress_large" checked>
+                            <label class="form-check-label" for="compressLarge">
+                                Compress large files (>100MB) to save storage space
+                            </label>
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="uploadedBy" name="uploaded_by" value="">
+                </form>
+
+                <!-- Upload Progress -->
+                <div id="uploadProgress" style="display: none;">
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between">
+                            <span>Uploading...</span>
+                            <span id="progressPercent">0%</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="uploadFile()">
+                    <i class="fas fa-upload me-2"></i>Upload File
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Share File Modal -->
+<div class="modal fade" id="shareModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-share-alt me-2"></i>Share File
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="shareForm">
+                    <input type="hidden" id="shareFileId" value="">
+                    
+                    <div class="mb-3">
+                        <label for="shareWithEmployee" class="form-label">Share With Employee</label>
+                        <select class="form-select" id="shareWithEmployee">
+                            <option value="">Select employee (leave empty for public share)...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="shareExpiration" class="form-label">Expires In</label>
+                        <select class="form-select" id="shareExpiration">
+                            <option value="24">24 Hours</option>
+                            <option value="72">3 Days</option>
+                            <option value="168" selected>7 Days</option>
+                            <option value="336">14 Days</option>
+                            <option value="720">30 Days</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="downloadLimit" class="form-label">Download Limit (Optional)</label>
+                        <input type="number" class="form-control" id="downloadLimit" min="1" max="100" 
+                               placeholder="Leave empty for unlimited downloads">
+                    </div>
+                </form>
+                
+                <!-- Share Link Display -->
+                <div id="shareLinkContainer" style="display: none;">
+                    <hr>
+                    <div class="alert alert-success">
+                        <h6>Share Link Created!</h6>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="shareLink" readonly>
+                            <button class="btn btn-outline-secondary" onclick="copyShareLink()">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted mt-2 d-block">You can also send this file via message.</small>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="createShare()" id="createShareBtn">
+                    <i class="fas fa-share-alt me-2"></i>Create Share
+                </button>
+                <button type="button" class="btn btn-success" onclick="sendViaMessage()" id="sendMessageBtn" style="display: none;">
+                    <i class="fas fa-envelope me-2"></i>Send via Message
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.file-icon {
+    font-size: 1.2rem;
+    margin-right: 8px;
+}
+
+.file-dicom { color: #007bff; }
+.file-nifti { color: #28a745; }
+.file-image { color: #fd7e14; }
+.file-pdf { color: #dc3545; }
+.file-zip { color: #6f42c1; }
+.file-generic { color: #6c757d; }
+
+.upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.upload-area.dragover {
+    border-color: #007bff;
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+.progress {
+    height: 8px;
+}
+</style>
+
+<script>
+let currentEmployeeId = '';
+let myFiles = [];
+let sharedFiles = [];
+let fileCategories = [];
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Get current employee ID from URL params or session
+    const urlParams = new URLSearchParams(window.location.search);
+    currentEmployeeId = urlParams.get('employee_id') || 'EMP01'; // Default for testing
+    
+    document.getElementById('uploadedBy').value = currentEmployeeId;
+    
+    loadFileCategories();
+    loadEmployeesList();
+    loadMyFiles();
+    loadSharedFiles();
+    loadStats();
+    
+    // Set up drag and drop
+    setupDragDrop();
+});
+
+function loadFileCategories() {
+    fetch('/api/files/categories')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                fileCategories = data.categories;
+                const select = document.getElementById('fileCategory');
+                
+                data.categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.value;
+                    option.textContent = category.name;
+                    option.title = category.description;
+                    select.appendChild(option);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Failed to load file categories:', error);
+        });
+}
+
+function loadEmployeesList() {
+    fetch('/api/messaging/employees')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const select = document.getElementById('shareWithEmployee');
+                
+                data.employees.forEach(emp => {
+                    if (emp.id !== currentEmployeeId) {
+                        const option = document.createElement('option');
+                        option.value = emp.id;
+                        option.textContent = `${emp.name} (${emp.department})`;
+                        select.appendChild(option);
+                    }
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Failed to load employees:', error);
+        });
+}
+
+function loadMyFiles() {
+    fetch(`/api/files/user-files/${currentEmployeeId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                myFiles = data.files;
+                displayMyFiles(myFiles);
+                document.getElementById('myFilesCount').textContent = myFiles.length;
+            } else {
+                showAlert('Failed to load files: ' + data.error, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Failed to load my files:', error);
+            showAlert('Failed to load files', 'error');
+        });
+}
+
+function loadSharedFiles() {
+    fetch(`/api/files/shared-with-me/${currentEmployeeId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                sharedFiles = data.shared_files;
+                displaySharedFiles(sharedFiles);
+                document.getElementById('sharedFilesCount').textContent = sharedFiles.length;
+            } else {
+                showAlert('Failed to load shared files: ' + data.error, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Failed to load shared files:', error);
+            showAlert('Failed to load shared files', 'error');
+        });
+}
+
+function loadStats() {
+    fetch('/api/files/stats')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const stats = data.stats;
+                document.getElementById('totalStorage').textContent = `${stats.total_size_mb} MB`;
+                document.getElementById('totalDownloads').textContent = stats.total_downloads;
+            }
+        })
+        .catch(error => {
+            console.error('Failed to load stats:', error);
+        });
+}
+
+function displayMyFiles(files) {
+    const tbody = document.getElementById('myFilesTable');
+    
+    if (!files || files.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-4">
+                    <i class="fas fa-folder-open fa-2x text-muted mb-2"></i>
+                    <p class="text-muted">No files uploaded yet</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = files.map(file => `
+        <tr>
+            <td>
+                <i class="fas fa-${getFileIcon(file.file_type)} file-icon file-${file.file_type}"></i>
+                ${file.original_filename}
+                ${file.is_compressed ? '<span class="badge bg-info ms-2">Compressed</span>' : ''}
+            </td>
+            <td><span class="badge bg-secondary">${file.file_type.toUpperCase()}</span></td>
+            <td>${file.file_category.replace('_', ' ')}</td>
+            <td>${file.file_size_mb} MB</td>
+            <td>${formatDateTime(file.upload_date)}</td>
+            <td>${file.download_count}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary" onclick="shareFile('${file.file_id}', '${file.original_filename}')">
+                    <i class="fas fa-share-alt"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteFile('${file.file_id}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function displaySharedFiles(files) {
+    const tbody = document.getElementById('sharedFilesTable');
+    
+    if (!files || files.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-4">
+                    <i class="fas fa-share-alt fa-2x text-muted mb-2"></i>
+                    <p class="text-muted">No files shared with you</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = files.map(file => `
+        <tr>
+            <td>
+                <i class="fas fa-${getFileIcon(file.file_type)} file-icon file-${file.file_type}"></i>
+                ${file.original_filename}
+            </td>
+            <td><span class="badge bg-secondary">${file.file_type.toUpperCase()}</span></td>
+            <td>${file.file_category.replace('_', ' ')}</td>
+            <td>${file.file_size_mb} MB</td>
+            <td>${file.shared_by}</td>
+            <td>${file.expires_at ? formatDateTime(file.expires_at) : 'No expiration'}</td>
+            <td>
+                <a href="${file.download_url}?user_id=${currentEmployeeId}" class="btn btn-sm btn-success" target="_blank">
+                    <i class="fas fa-download"></i> Download
+                </a>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function showUploadModal() {
+    document.getElementById('uploadForm').reset();
+    document.getElementById('uploadedBy').value = currentEmployeeId;
+    document.getElementById('uploadProgress').style.display = 'none';
+    new bootstrap.Modal(document.getElementById('uploadModal')).show();
+}
+
+function uploadFile() {
+    const form = document.getElementById('uploadForm');
+    const formData = new FormData(form);
+    
+    // Show progress
+    document.getElementById('uploadProgress').style.display = 'block';
+    
+    const xhr = new XMLHttpRequest();
+    
+    // Progress tracking
+    xhr.upload.addEventListener('progress', function(e) {
+        if (e.lengthComputable) {
+            const percentComplete = (e.loaded / e.total) * 100;
+            document.getElementById('progressBar').style.width = percentComplete + '%';
+            document.getElementById('progressPercent').textContent = Math.round(percentComplete) + '%';
+        }
+    });
+    
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            const response = JSON.parse(xhr.responseText);
+            if (response.success) {
+                showAlert('File uploaded successfully!', 'success');
+                bootstrap.Modal.getInstance(document.getElementById('uploadModal')).hide();
+                loadMyFiles();
+                loadStats();
+            } else {
+                showAlert('Upload failed: ' + response.error, 'error');
+            }
+        } else {
+            showAlert('Upload failed', 'error');
+        }
+        
+        document.getElementById('uploadProgress').style.display = 'none';
+    };
+    
+    xhr.onerror = function() {
+        showAlert('Upload failed', 'error');
+        document.getElementById('uploadProgress').style.display = 'none';
+    };
+    
+    xhr.open('POST', '/api/files/upload');
+    xhr.send(formData);
+}
+
+function shareFile(fileId, fileName) {
+    document.getElementById('shareFileId').value = fileId;
+    document.getElementById('shareLinkContainer').style.display = 'none';
+    document.getElementById('createShareBtn').style.display = 'inline-block';
+    document.getElementById('sendMessageBtn').style.display = 'none';
+    
+    new bootstrap.Modal(document.getElementById('shareModal')).show();
+}
+
+function createShare() {
+    const fileId = document.getElementById('shareFileId').value;
+    const sharedWith = document.getElementById('shareWithEmployee').value || null;
+    const expiresHours = parseInt(document.getElementById('shareExpiration').value);
+    const downloadLimit = document.getElementById('downloadLimit').value ? 
+                          parseInt(document.getElementById('downloadLimit').value) : null;
+    
+    const shareData = {
+        file_id: fileId,
+        shared_by: currentEmployeeId,
+        shared_with: sharedWith,
+        expires_hours: expiresHours,
+        download_limit: downloadLimit
+    };
+    
+    fetch('/api/files/share', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(shareData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const shareUrl = `${window.location.origin}${data.share_info.share_url}?user_id=${currentEmployeeId}`;
+            document.getElementById('shareLink').value = shareUrl;
+            document.getElementById('shareLinkContainer').style.display = 'block';
+            document.getElementById('createShareBtn').style.display = 'none';
+            document.getElementById('sendMessageBtn').style.display = 'inline-block';
+            
+            showAlert('Share link created successfully!', 'success');
+        } else {
+            showAlert('Failed to create share: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Failed to create share:', error);
+        showAlert('Failed to create share', 'error');
+    });
+}
+
+function copyShareLink() {
+    const shareLink = document.getElementById('shareLink');
+    shareLink.select();
+    shareLink.setSelectionRange(0, 99999);
+    document.execCommand('copy');
+    
+    showAlert('Share link copied to clipboard!', 'success');
+}
+
+function sendViaMessage() {
+    const shareLink = document.getElementById('shareLink').value;
+    const sharedWith = document.getElementById('shareWithEmployee').value;
+    
+    if (!sharedWith) {
+        showAlert('Please select an employee to send the message to', 'warning');
+        return;
+    }
+    
+    // Open messaging interface with pre-filled content
+    const messageContent = `I've shared a medical file with you. You can download it using this link:\n\n${shareLink}`;
+    const messageUrl = `/api/messaging/interface?employee_id=${currentEmployeeId}&to=${sharedWith}&subject=Medical File Shared&content=${encodeURIComponent(messageContent)}`;
+    
+    window.open(messageUrl, '_blank');
+    
+    bootstrap.Modal.getInstance(document.getElementById('shareModal')).hide();
+}
+
+function deleteFile(fileId) {
+    if (!confirm('Are you sure you want to delete this file? This action cannot be undone.')) {
+        return;
+    }
+    
+    fetch(`/api/files/delete/${fileId}?user_id=${currentEmployeeId}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('File deleted successfully', 'success');
+            loadMyFiles();
+            loadStats();
+        } else {
+            showAlert('Failed to delete file: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Failed to delete file:', error);
+        showAlert('Failed to delete file', 'error');
+    });
+}
+
+function refreshFiles() {
+    loadMyFiles();
+    loadSharedFiles();
+    loadStats();
+    showAlert('Files refreshed', 'info');
+}
+
+function setupDragDrop() {
+    const uploadArea = document.getElementById('uploadModal');
+    
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            document.getElementById('fileInput').files = files;
+        }
+    });
+}
+
+function getFileIcon(fileType) {
+    const icons = {
+        'dicom': 'file-medical',
+        'nifti': 'brain',
+        'tiff': 'image',
+        'png': 'image',
+        'jpeg': 'image',
+        'pdf': 'file-pdf',
+        'zip': 'file-archive',
+        'rar': 'file-archive',
+        'generic': 'file'
+    };
+    
+    return icons[fileType] || 'file';
+}
+
+function formatDateTime(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleString();
+}
+
+function showAlert(message, type) {
+    const alertContainer = document.getElementById('alertContent');
+    const alertClass = type === 'error' ? 'alert-danger' : `alert-${type}`;
+    
+    alertContainer.innerHTML = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        const alert = alertContainer.querySelector('.alert');
+        if (alert) {
+            bootstrap.Alert.getOrCreateInstance(alert).close();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

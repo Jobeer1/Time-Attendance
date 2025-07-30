@@ -1,0 +1,80 @@
+[
+  {
+    "id": "LR20250713150001",
+    "employee_id": "EMP01",
+    "leave_type": "annual",
+    "start_date": "2025-07-15T00:00:00",
+    "end_date": "2025-07-17T00:00:00",
+    "reason": "Vacation",
+    "status": "rejected",
+    "applied_date": "2025-07-13T15:00:01",
+    "reviewed_by": "",
+    "reviewed_date": "",
+    "notes": "Test leave request"
+  },
+  {
+    "id": "LR20250713150002",
+    "employee_id": "EMP02",
+    "leave_type": "sick",
+    "start_date": "2025-07-14T00:00:00",
+    "end_date": "2025-07-14T00:00:00",
+    "reason": "Medical appointment",
+    "status": "rejected",
+    "applied_date": "2025-07-13T15:30:01",
+    "reviewed_by": "",
+    "reviewed_date": "",
+    "notes": "Doctor's visit"
+  },
+  {
+    "id": "LA20250713183536P001",
+    "employee_id": "EMP001",
+    "leave_type": "good_will_paid",
+    "start_date": "2025-07-15T00:00:00",
+    "end_date": "2025-07-16T00:00:00",
+    "reason": "i don't want to work",
+    "status": "rejected",
+    "applied_date": "2025-07-13T18:35:36.895347",
+    "reviewed_by": "",
+    "reviewed_date": "",
+    "notes": ""
+  },
+  {
+    "id": "LR20250720120001",
+    "employee_id": "EMP03",
+    "leave_type": "annual",
+    "start_date": "2025-08-01T00:00:00",
+    "end_date": "2025-08-05T00:00:00",
+    "reason": "Family vacation",
+    "status": "approved",
+    "applied_date": "2025-07-20T12:00:01",
+    "reviewed_by": "",
+    "reviewed_date": "",
+    "notes": "Approved vacation request"
+  },
+  {
+    "id": "LR20250721090001",
+    "employee_id": "EMP04",
+    "leave_type": "sick",
+    "start_date": "2025-07-22T00:00:00",
+    "end_date": "2025-07-23T00:00:00",
+    "reason": "Flu symptoms",
+    "status": "approved",
+    "applied_date": "2025-07-21T09:00:01",
+    "reviewed_by": "",
+    "reviewed_date": "",
+    "notes": "Medical certificate provided"
+  },
+  {
+    "id": "LA20250729122230P001",
+    "employee_id": "EMP001",
+    "leave_type": "good_will_paid",
+    "start_date": "2025-07-30T00:00:00",
+    "end_date": "2025-08-01T00:00:00",
+    "reason": "i love",
+    "status": "approved",
+    "applied_date": "2025-07-29T12:22:30.539225",
+    "reviewed_by": "",
+    "reviewed_date": "",
+    "notes": ""
+  }
+]

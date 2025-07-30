@@ -1,0 +1,541 @@
+{% extends "attendance/base.html" %}
+{% set is_terminal_mode = true %}
+
+{% block title %}Camera Test - Time Attendance{% endblock %}
+{% block body_class %}camera-test-page{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <h1 class="h3 mb-0" style="color: white !important;">Camera Test</h1>
+                <p class="text-muted">Test camera functionality and permissions</p>
+            </div>
+
+            <!-- Camera Status Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-camera me-2"></i>Camera Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div id="cameraStatus" class="alert alert-secondary">
+                                <i class="fas fa-spinner fa-spin me-2"></i>Checking camera access...
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button id="startCameraBtn" class="btn btn-primary" onclick="testCamera()">
+                                    <i class="fas fa-play me-2"></i>Start Camera Test
+                                </button>
+                                <button id="stopCameraBtn" class="btn btn-danger" onclick="stopCameraTest()" style="display: none;">
+                                    <i class="fas fa-stop me-2"></i>Stop Camera
+                                </button>                                <button id="checkPermissionsBtn" class="btn btn-info" onclick="checkPermissions()">
+                                    <i class="fas fa-shield-alt me-2"></i>Check Permissions
+                                </button>
+                                <button id="windowsCameraBtn" class="btn btn-warning" onclick="openWindowsCameraApp()">
+                                    <i class="fab fa-windows me-2"></i>Test Windows Camera
+                                </button>
+                                <button id="refreshPageBtn" class="btn btn-secondary" onclick="window.location.reload()">
+                                    <i class="fas fa-refresh me-2"></i>Refresh Page
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="camera-preview">
+                                <video id="testVideo" autoplay muted playsinline style="width: 100%; max-height: 300px; border: 2px solid #dee2e6; border-radius: 8px; background: #f8f9fa;">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Device Information Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Device Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="deviceInfo">
+                        <p class="text-muted">Click "Check Permissions" to see available devices</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Troubleshooting Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-tools me-2"></i>Troubleshooting Guide
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="troubleshootingAccordion">
+                        <!-- Windows Privacy Settings -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="windowsPrivacyHeading">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#windowsPrivacy" aria-expanded="false">
+                                    <i class="fab fa-windows me-2"></i>Windows Privacy Settings
+                                </button>
+                            </h2>
+                            <div id="windowsPrivacy" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                                <div class="accordion-body">
+                                    <p><strong>If camera is not detected on Windows:</strong></p>
+                                    <ol>
+                                        <li>Press <kbd>Windows + I</kbd> to open Settings</li>
+                                        <li>Go to <strong>Privacy & Security</strong> → <strong>Camera</strong></li>
+                                        <li>Make sure <strong>"Camera access"</strong> is turned ON</li>
+                                        <li>Make sure <strong>"Let apps access your camera"</strong> is turned ON</li>
+                                        <li>Make sure <strong>"Let desktop apps access your camera"</strong> is turned ON</li>
+                                        <li>Scroll down and ensure your browser is allowed camera access</li>
+                                    </ol>
+                                    <div class="alert alert-info mt-3">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        You may need to restart your browser after changing these settings.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Browser Permissions -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="browserPermissionsHeading">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#browserPermissions" aria-expanded="false">
+                                    <i class="fas fa-browser me-2"></i>Browser Permissions
+                                </button>
+                            </h2>
+                            <div id="browserPermissions" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                                <div class="accordion-body">
+                                    <p><strong>Chrome/Edge:</strong></p>
+                                    <ol>
+                                        <li>Click the <strong>lock icon</strong> or <strong>camera icon</strong> in the address bar</li>
+                                        <li>Set Camera permission to <strong>"Allow"</strong></li>
+                                        <li>Alternatively: Settings → Privacy and Security → Site Settings → Camera</li>
+                                    </ol>
+                                    
+                                    <p class="mt-3"><strong>Firefox:</strong></p>
+                                    <ol>
+                                        <li>Click the <strong>shield icon</strong> in the address bar</li>
+                                        <li>Click <strong>"Enable Camera"</strong> if blocked</li>
+                                        <li>Alternatively: Settings → Privacy & Security → Permissions → Camera</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Hardware Issues -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="hardwareIssuesHeading">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#hardwareIssues" aria-expanded="false">
+                                    <i class="fas fa-camera me-2"></i>Hardware Issues
+                                </button>
+                            </h2>
+                            <div id="hardwareIssues" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                                <div class="accordion-body">
+                                    <p><strong>Common hardware issues:</strong></p>
+                                    <ul>
+                                        <li><strong>Camera in use:</strong> Close other applications that might be using the camera (Skype, Teams, Zoom, etc.)</li>
+                                        <li><strong>Driver issues:</strong> Update camera drivers through Device Manager</li>
+                                        <li><strong>External camera:</strong> Make sure it's properly connected and powered</li>
+                                        <li><strong>Privacy cover:</strong> Check if your camera has a physical privacy cover that's closed</li>
+                                    </ul>
+                                    
+                                    <p class="mt-3"><strong>Check Device Manager:</strong></p>
+                                    <ol>
+                                        <li>Press <kbd>Windows + X</kbd> and select <strong>Device Manager</strong></li>
+                                        <li>Look for <strong>"Cameras"</strong> or <strong>"Imaging devices"</strong></li>
+                                        <li>If you see a yellow warning icon, right-click and select <strong>"Update driver"</strong></li>
+                                        <li>If no camera is listed, it may not be properly connected or recognized</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Test in Other Apps -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="testOtherAppsHeading">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#testOtherApps" aria-expanded="false">
+                                    <i class="fas fa-test-tube me-2"></i>Test in Other Applications
+                                </button>
+                            </h2>
+                            <div id="testOtherApps" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                                <div class="accordion-body">
+                                    <p><strong>Try these to verify camera hardware works:</strong></p>
+                                    <ul>
+                                        <li><strong>Windows Camera app:</strong> Press <kbd>Windows + S</kbd>, search for "Camera", and open the app</li>
+                                        <li><strong>Other browsers:</strong> Test this page in Chrome, Firefox, or Edge</li>
+                                        <li><strong>Video calling apps:</strong> Try Skype, Teams, or Zoom camera test</li>
+                                    </ul>
+                                    
+                                    <div class="alert alert-warning mt-3">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        If camera doesn't work in any application, it's likely a hardware or driver issue.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-browser me-2"></i>Browser Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>User Agent:</strong><br><small id="userAgent"></small></p>
+                            <p><strong>Protocol:</strong> <span id="protocol"></span></p>
+                            <p><strong>Host:</strong> <span id="hostname"></span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>getUserMedia Support:</strong> <span id="getUserMediaSupport"></span></p>
+                            <p><strong>MediaDevices Support:</strong> <span id="mediaDevicesSupport"></span></p>
+                            <p><strong>HTTPS:</strong> <span id="httpsStatus"></span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Back Button -->
+            <div class="text-center mt-4">
+                <a href="/" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let testStream = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    updateBrowserInfo();
+    checkPermissions();
+});
+
+function updateBrowserInfo() {
+    document.getElementById('userAgent').textContent = navigator.userAgent;
+    document.getElementById('protocol').textContent = window.location.protocol;
+    document.getElementById('hostname').textContent = window.location.host;
+    document.getElementById('getUserMediaSupport').textContent = navigator.getUserMedia ? 'Yes' : 'No';
+    document.getElementById('mediaDevicesSupport').textContent = navigator.mediaDevices ? 'Yes' : 'No';
+    document.getElementById('httpsStatus').textContent = window.location.protocol === 'https:' ? 'Yes' : 'No';
+}
+
+async function checkPermissions() {
+    const statusDiv = document.getElementById('cameraStatus');
+    const deviceInfoDiv = document.getElementById('deviceInfo');
+    
+    try {
+        statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Performing comprehensive camera check...';
+        statusDiv.className = 'alert alert-info';
+
+        let infoHtml = '<h6>Diagnostic Results:</h6>';
+        
+        // Check 1: Browser API Support
+        infoHtml += '<div class="mb-3"><strong>Browser API Support:</strong><ul>';
+        infoHtml += `<li>navigator.mediaDevices: ${navigator.mediaDevices ? '✓ Available' : '✗ Not available'}</li>`;
+        infoHtml += `<li>getUserMedia: ${navigator.mediaDevices?.getUserMedia ? '✓ Available' : '✗ Not available'}</li>`;
+        infoHtml += `<li>enumerateDevices: ${navigator.mediaDevices?.enumerateDevices ? '✓ Available' : '✗ Not available'}</li>`;
+        infoHtml += '</ul></div>';
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            statusDiv.innerHTML = '<i class="fas fa-times me-2"></i>MediaDevices API not supported in this browser';
+            statusDiv.className = 'alert alert-danger';
+            deviceInfoDiv.innerHTML = infoHtml;
+            return;
+        }
+
+        // Check 2: Secure Context
+        infoHtml += '<div class="mb-3"><strong>Security Context:</strong><ul>';
+        infoHtml += `<li>Secure Context: ${window.isSecureContext ? '✓ Yes (HTTPS/localhost)' : '✗ No (HTTP)'}</li>`;
+        infoHtml += `<li>Protocol: ${window.location.protocol}</li>`;
+        infoHtml += `<li>Host: ${window.location.host}</li>`;
+        infoHtml += '</ul></div>';
+
+        // Check 3: Device Enumeration (before permission)
+        infoHtml += '<div class="mb-3"><strong>Device Enumeration (Before Permission):</strong><ul>';
+        try {
+            const devicesBeforePermission = await navigator.mediaDevices.enumerateDevices();
+            const videoInputsBefore = devicesBeforePermission.filter(device => device.kind === 'videoinput');
+            
+            infoHtml += `<li>Total devices found: ${devicesBeforePermission.length}</li>`;
+            infoHtml += `<li>Video input devices: ${videoInputsBefore.length}</li>`;
+            
+            if (videoInputsBefore.length > 0) {
+                infoHtml += '<li>Video devices detected:<ul>';
+                videoInputsBefore.forEach((device, index) => {
+                    infoHtml += `<li>Device ${index + 1}: ${device.label || 'Unlabeled camera'} (${device.deviceId.substring(0, 12)}...)</li>`;
+                });
+                infoHtml += '</ul></li>';
+            } else {
+                infoHtml += '<li class="text-warning">⚠️ No video input devices detected</li>';
+            }
+        } catch (enumError) {
+            infoHtml += `<li class="text-danger">✗ Enumeration failed: ${enumError.message}</li>`;
+        }
+        infoHtml += '</ul></div>';
+
+        // Check 4: Camera Access Tests
+        infoHtml += '<div class="mb-3"><strong>Camera Access Tests:</strong><ul>';
+        
+        const accessTests = [
+            { name: 'Basic Access', constraints: { video: true } },
+            { name: 'User Camera', constraints: { video: { facingMode: 'user' } } },
+            { name: 'With Size Constraints', constraints: { video: { width: 640, height: 480 } } },
+            { name: 'Minimal Constraints', constraints: { video: { width: { min: 320 }, height: { min: 240 } } } }
+        ];
+        
+        let anyAccessWorked = false;
+        let grantedStream = null;
+        
+        for (const test of accessTests) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia(test.constraints);
+                if (stream && stream.getVideoTracks().length > 0) {
+                    infoHtml += `<li class="text-success">✓ ${test.name}: SUCCESS</li>`;
+                    if (!grantedStream) {
+                        grantedStream = stream; // Keep first successful stream for later testing
+                    } else {
+                        stream.getTracks().forEach(track => track.stop()); // Stop additional streams
+                    }
+                    anyAccessWorked = true;
+                } else {
+                    infoHtml += `<li class="text-warning">⚠️ ${test.name}: Stream created but no video tracks</li>`;
+                }
+            } catch (accessError) {
+                infoHtml += `<li class="text-danger">✗ ${test.name}: ${accessError.name} - ${accessError.message}</li>`;
+            }
+        }
+        infoHtml += '</ul></div>';
+
+        // Check 5: Device Enumeration (after permission)
+        if (anyAccessWorked) {
+            infoHtml += '<div class="mb-3"><strong>Device Enumeration (After Permission):</strong><ul>';
+            try {
+                const devicesAfterPermission = await navigator.mediaDevices.enumerateDevices();
+                const videoInputsAfter = devicesAfterPermission.filter(device => device.kind === 'videoinput');
+                
+                infoHtml += `<li>Total devices found: ${devicesAfterPermission.length}</li>`;
+                infoHtml += `<li>Video input devices: ${videoInputsAfter.length}</li>`;
+                
+                if (videoInputsAfter.length > 0) {
+                    infoHtml += '<li>Video devices with labels:<ul>';
+                    videoInputsAfter.forEach((device, index) => {
+                        infoHtml += `<li>Device ${index + 1}: <strong>${device.label || 'Unknown Camera'}</strong> (${device.deviceId.substring(0, 12)}...)</li>`;
+                    });
+                    infoHtml += '</ul></li>';
+                }
+            } catch (enumError) {
+                infoHtml += `<li class="text-danger">✗ Post-permission enumeration failed: ${enumError.message}</li>`;
+            }
+            infoHtml += '</ul></div>';
+        }
+
+        // Check 6: Track Information
+        if (grantedStream) {
+            const videoTrack = grantedStream.getVideoTracks()[0];
+            if (videoTrack) {
+                infoHtml += '<div class="mb-3"><strong>Active Video Track Info:</strong><ul>';
+                infoHtml += `<li>Label: ${videoTrack.label}</li>`;
+                infoHtml += `<li>Kind: ${videoTrack.kind}</li>`;
+                infoHtml += `<li>Enabled: ${videoTrack.enabled}</li>`;
+                infoHtml += `<li>Muted: ${videoTrack.muted}</li>`;
+                infoHtml += `<li>Ready State: ${videoTrack.readyState}</li>`;
+                
+                try {
+                    const settings = videoTrack.getSettings();
+                    infoHtml += '<li>Settings:<ul>';
+                    Object.entries(settings).forEach(([key, value]) => {
+                        infoHtml += `<li>${key}: ${value}</li>`;
+                    });
+                    infoHtml += '</ul></li>';
+                } catch (settingsError) {
+                    infoHtml += `<li>Settings: Error getting settings - ${settingsError.message}</li>`;
+                }
+                
+                try {
+                    const capabilities = videoTrack.getCapabilities();
+                    infoHtml += '<li>Capabilities:<ul>';
+                    Object.entries(capabilities).forEach(([key, value]) => {
+                        infoHtml += `<li>${key}: ${JSON.stringify(value)}</li>`;
+                    });
+                    infoHtml += '</ul></li>';
+                } catch (capError) {
+                    infoHtml += `<li>Capabilities: Not available or error - ${capError.message}</li>`;
+                }
+                
+                infoHtml += '</ul></div>';
+            }
+            
+            // Clean up the test stream
+            grantedStream.getTracks().forEach(track => track.stop());
+        }
+
+        // Set final status
+        if (anyAccessWorked) {
+            statusDiv.innerHTML = '<i class="fas fa-check me-2"></i>Camera access successful - Camera is working!';
+            statusDiv.className = 'alert alert-success';
+        } else {
+            statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Camera access failed - See diagnostics below';
+            statusDiv.className = 'alert alert-warning';
+        }
+        
+        // Add troubleshooting tips
+        if (!anyAccessWorked) {
+            infoHtml += '<div class="mt-4 alert alert-info"><strong>Troubleshooting Tips:</strong><ul>';
+            infoHtml += '<li>Make sure your camera is not being used by another application</li>';
+            infoHtml += '<li>Check if your browser has camera permissions enabled for this site</li>';
+            infoHtml += '<li>Try refreshing the page and clicking "Allow" when prompted for camera access</li>';
+            infoHtml += '<li>Make sure your camera drivers are installed and up to date</li>';
+            infoHtml += '<li>Try testing in a different browser (Chrome, Firefox, Edge)</li>';
+            infoHtml += '<li>On Windows, check Privacy Settings → Camera and ensure camera access is enabled</li>';
+            infoHtml += '</ul></div>';
+        }
+        
+        deviceInfoDiv.innerHTML = infoHtml;
+        
+    } catch (error) {
+        console.error('Comprehensive camera check failed:', error);
+        statusDiv.innerHTML = `<i class="fas fa-times me-2"></i>Camera check failed: ${error.message}`;
+        statusDiv.className = 'alert alert-danger';
+        deviceInfoDiv.innerHTML = `<p class="text-danger">Diagnostic error: ${error.message}</p>`;
+    }
+}
+
+async function testCamera() {
+    const video = document.getElementById('testVideo');
+    const startBtn = document.getElementById('startCameraBtn');
+    const stopBtn = document.getElementById('stopCameraBtn');
+    const statusDiv = document.getElementById('cameraStatus');
+    
+    try {
+        statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Starting camera...';
+        statusDiv.className = 'alert alert-info';
+        
+        testStream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                width: { ideal: 640, min: 320 }, 
+                height: { ideal: 480, min: 240 },
+                facingMode: 'user'
+            } 
+        });
+        
+        video.srcObject = testStream;
+        await video.play();
+        
+        statusDiv.innerHTML = '<i class="fas fa-check me-2"></i>Camera is working! Live preview active';
+        statusDiv.className = 'alert alert-success';
+        
+        startBtn.style.display = 'none';
+        stopBtn.style.display = 'block';
+        
+    } catch (error) {
+        console.error('Camera test failed:', error);
+        statusDiv.innerHTML = `<i class="fas fa-times me-2"></i>Camera test failed: ${error.message}`;
+        statusDiv.className = 'alert alert-danger';
+    }
+}
+
+function stopCameraTest() {
+    const video = document.getElementById('testVideo');
+    const startBtn = document.getElementById('startCameraBtn');
+    const stopBtn = document.getElementById('stopCameraBtn');
+    const statusDiv = document.getElementById('cameraStatus');
+    
+    if (testStream) {
+        testStream.getTracks().forEach(track => track.stop());
+        testStream = null;
+    }
+    
+    video.srcObject = null;
+    
+    statusDiv.innerHTML = '<i class="fas fa-stop me-2"></i>Camera stopped';
+    statusDiv.className = 'alert alert-secondary';
+    
+    startBtn.style.display = 'block';
+    stopBtn.style.display = 'none';
+}
+
+// Stop camera when leaving page
+window.addEventListener('beforeunload', stopCameraTest);
+
+function openWindowsCameraApp() {
+    // Try to open Windows Camera app
+    try {
+        const userAgent = navigator.userAgent.toLowerCase();
+        
+        if (userAgent.includes('windows')) {
+            // Show instructions for opening Windows Camera app
+            const modal = document.createElement('div');
+            modal.className = 'modal fade';
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="fab fa-windows me-2"></i>Test Windows Camera App
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p><strong>To test if your camera works with Windows:</strong></p>
+                            <ol>
+                                <li>Press <kbd>Windows Key + S</kbd></li>
+                                <li>Type "Camera" and press Enter</li>
+                                <li>Or press <kbd>Windows Key + R</kbd>, type <code>microsoft.windows.camera:</code> and press Enter</li>
+                            </ol>
+                            
+                            <div class="alert alert-info mt-3">
+                                <i class="fas fa-info-circle me-2"></i>
+                                If the Windows Camera app works, but this web page doesn't, it's likely a browser permission issue.
+                            </div>
+                            
+                            <div class="alert alert-warning mt-3">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                If the Windows Camera app doesn't work either, check your camera hardware and privacy settings.
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="window.open('ms-windows-store://search/?query=camera', '_blank')">
+                                Open Store (if Camera app missing)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            const modalInstance = new bootstrap.Modal(modal);
+            modalInstance.show();
+            
+            // Clean up modal after it's hidden
+            modal.addEventListener('hidden.bs.modal', () => {
+                document.body.removeChild(modal);
+            });
+            
+        } else {
+            alert('This feature is for Windows systems. On other operating systems, check your system camera app or video calling software to test camera functionality.');
+        }
+    } catch (error) {
+        console.error('Error opening Windows camera app:', error);
+        alert('Could not open Windows Camera app. Please manually open it by searching for "Camera" in the Start menu.');
+    }
+}
+</script>
+{% endblock %}
